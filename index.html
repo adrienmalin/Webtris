@@ -9,33 +9,110 @@
 <body>
 <canvas id="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
 <script>
-const MINO_SIZE = 20;
-const LINES = 20;
-const COLLUMNS = 10;
+const MINO_SIZE = 20
+const LINES = 20
+const COLLUMNS = 10
 
-const KEY = {
-    MOVE_LEFT: 37,
-    MOVE_RIGHT: 39,
-    SOFT_DROP: 40
+const ACTION_KEY = {
+    MOVE_LEFT: "ArrowLeft",
+    MOVE_RIGHT: "ArrowRight",
+    SOFT_DROP: "ArrowDown",
+    ROTATE_CW: "ArrowUp",
+    ROTATE_CCW: "z"
+}
+
+class Vect {
+    constructor (x, y) {
+        this.x = x
+        this.y = y
+    }
+    
+    add(other) {
+        return new Vect(this.x + other.x, this.y + other.y)
+    }
+    
+    rotate(spin) {
+        return new Vect(spin * this.y, -spin * this.x)
+    }
 }
 
 
-class Mino {
-    constructor(color) {
-        this.x = 4;
-        this.y = 0;
-        this.color = color;
+const INIT_POSITION = new Vect(4, -1)
+
+const MOVEMENT = {
+    LEFT: new Vect(-1, 0),
+    RIGHT: new Vect(1, 0),
+    DOWN: new Vect(0, 1)
+}
+
+const SPIN = {
+    CW: 1,
+    CCW: -1
+}
+
+class T {
+    constructor() {
+        this.pos = INIT_POSITION
+        this.color = "orange"
+        this.minoes_pos = [new Vect(-1, 0), new Vect(0, 0), new Vect(1, 0), new Vect(0, 1)]
+        this.orientation = 0
+        this.SRS = new Map([
+            [
+                SPIN.CW,
+                [
+                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, 1), new Vect(0, -2), new Vect(-1, -2)],
+                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, -1), new Vect(0, 2), new Vect(1, 2)],
+                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, 1), new Vect(0, -2), new Vect(1, -2)],
+                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, -1), new Vect(0, -2), new Vect(-1, 2)],
+                ]
+            ],
+            [
+                SPIN.CCW,
+                [
+                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, 1), new Vect(0, -2), new Vect(1, -2)],
+                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, -1), new Vect(0, 2), new Vect(1, 2)],
+                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, 1), new Vect(0, -2), new Vect(-1, -2)],
+                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, -1), new Vect(0, 2), new Vect(-1, 2)],
+                ]
+            ],
+        ])
+
     }
     
     draw(context) {
-        context.fillStyle = this.color;
-        context.fillRect(this.x*MINO_SIZE, this.y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
+        for(const pos of this.minoes_pos) {
+            const abs_pos = this.pos.add(pos)
+            draw_mino(context, abs_pos.x, abs_pos.y, this.color)
+        }
     }
 }
 
+    
+function draw_mino(context, x, y, color) {
+    context.fillStyle = color
+    context.fillRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
+    context.strokeStyle = "white";
+    context.strokeRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
+}
 
 class Matrix {
     constructor() {
+        this.cells = Array.from(Array(COLLUMNS), y => Array(LINES))
+    }
+    
+    occupied_cell(pos) {
+        if (0 <= pos.x && pos.x < COLLUMNS && pos.y < LINES)
+            return this.cells[pos.x][pos.y]
+        else
+            return true
+    }
+    
+    space_to_move(piece_pos, minoes_pos) {
+        for (const mino_pos of minoes_pos) {
+            if (this.occupied_cell(piece_pos.add(mino_pos)))
+                return false
+        }
+        return true
     }
     
     draw(context) {
@@ -45,33 +122,64 @@ class Matrix {
         context.strokeStyle = "rgba(128, 128, 128, 128)";
         context.beginPath();
         for (var x = 0; x <= COLLUMNS*MINO_SIZE; x += MINO_SIZE) {
-            context.moveTo(x, 0); context.lineTo(x, matrixCanvas.height);
+            context.moveTo(x, 0);
+            context.lineTo(x, matrixCanvas.height);
         }
         for (var y = 0; y <= LINES*MINO_SIZE; y += MINO_SIZE) {
-            context.moveTo(0, y); context.lineTo(matrixCanvas.width, y);
+            context.moveTo(0, y);
+            context.lineTo(matrixCanvas.width, y);
         }
         context.stroke();
     }
 
 }
 
-matrixCanvas = document.getElementById("matrix");
-matrixContext = matrixCanvas.getContext("2d");
+function move(movement) {
+    const test_pos = tetro.pos.add(movement)
+    if (matrix.space_to_move(test_pos, tetro.minoes_pos)) {
+        tetro.pos = test_pos
+        draw()
+    }
+}
 
-mino = new Mino("orange")
-matrix = new Matrix()
+function rotate(spin) {
+    const text_minoes_pos = Array.from(tetro.minoes_pos, pos => pos.rotate(spin))
+    rotation_point = 0
+    for (const movement of tetro.SRS.get(spin)[tetro.orientation]) {
+        test_pos = tetro.pos.add(movement)
+        console.log(test_pos)
+        if (matrix.space_to_move(test_pos, text_minoes_pos)) {
+            tetro.pos = test_pos
+            tetro.minoes_pos = text_minoes_pos
+            tetro.orientation = (tetro.orientation + spin) % 4
+            draw()
+            break;
+        }
+        rotation_point++
+    }
+}
+
+function fall() {
+    move(MOVEMENT.DOWN);
+}
 
 function keyDownHandler(e) {
-    switch(e.keyCode){
-        case KEY.MOVE_LEFT:
-            mino.x -= 1;
-            break;
-        case KEY.MOVE_RIGHT:
-            mino.x += 1;
-            break;
-        case KEY.SOFT_DROP:
-            mino.y += 1;
-            break;
+    switch(e.key){
+        case ACTION_KEY.MOVE_LEFT:
+            move(MOVEMENT.LEFT);
+            break
+        case ACTION_KEY.MOVE_RIGHT:
+            move(MOVEMENT.RIGHT);
+            break
+        case ACTION_KEY.SOFT_DROP:
+            move(MOVEMENT.DOWN);
+            break
+        case ACTION_KEY.ROTATE_CW:
+            rotate(SPIN.CW);
+            break
+        case ACTION_KEY.ROTATE_CCW:
+            rotate(SPIN.CCW);
+            break
     }
 }
 
@@ -80,14 +188,21 @@ function keyUpHandler(e) {
 
 function draw() {
     matrix.draw(matrixContext)
-    mino.draw(matrixContext)
+    tetro.draw(matrixContext)
 }
 
 window.onload = function() {
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
-    setInterval(draw, 10);
+    setInterval(fall, 1000);
 }
+
+matrixCanvas = document.getElementById("matrix");
+matrixContext = matrixCanvas.getContext("2d");
+
+tetro = new T()
+matrix = new Matrix()
+
 </script>
 </body>
 </html>
