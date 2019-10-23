@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Webtris</title>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <!--[if lt IE 9]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
+</head>
+<body>
+<canvas id="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
+<script>
+const MINO_SIZE = 20;
+const LINES = 20;
+const COLLUMNS = 10;
+
+const KEY = {
+    MOVE_LEFT: 37,
+    MOVE_RIGHT: 39,
+    SOFT_DROP: 40
+}
+
+
+class Mino {
+    constructor(color) {
+        this.x = 4;
+        this.y = 0;
+        this.color = color;
+    }
+    
+    draw(context) {
+        context.fillStyle = this.color;
+        context.fillRect(this.x*MINO_SIZE, this.y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
+    }
+}
+
+
+class Matrix {
+    constructor() {
+    }
+    
+    draw(context) {
+        // clear
+        context.clearRect(0, 0, COLLUMNS*MINO_SIZE, LINES*MINO_SIZE);
+        // grid
+        context.strokeStyle = "rgba(128, 128, 128, 128)";
+        context.beginPath();
+        for (var x = 0; x <= COLLUMNS*MINO_SIZE; x += MINO_SIZE) {
+            context.moveTo(x, 0); context.lineTo(x, matrixCanvas.height);
+        }
+        for (var y = 0; y <= LINES*MINO_SIZE; y += MINO_SIZE) {
+            context.moveTo(0, y); context.lineTo(matrixCanvas.width, y);
+        }
+        context.stroke();
+    }
+
+}
+
+matrixCanvas = document.getElementById("matrix");
+matrixContext = matrixCanvas.getContext("2d");
+
+mino = new Mino("orange")
+matrix = new Matrix()
+
+function keyDownHandler(e) {
+    switch(e.keyCode){
+        case KEY.MOVE_LEFT:
+            mino.x -= 1;
+            break;
+        case KEY.MOVE_RIGHT:
+            mino.x += 1;
+            break;
+        case KEY.SOFT_DROP:
+            mino.y += 1;
+            break;
+    }
+}
+
+function keyUpHandler(e) {
+}
+
+function draw() {
+    matrix.draw(matrixContext)
+    mino.draw(matrixContext)
+}
+
+window.onload = function() {
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    setInterval(draw, 10);
+}
+</script>
+</body>
+</html>
