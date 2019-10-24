@@ -1,3 +1,12 @@
+Array.prototype.add = function(movement) {
+    return this.map((x, i) => x + movement[i])
+}
+
+Array.prototype.rotate = function(spin) {
+    return [spin*pos[1], pos[0]]
+}
+
+
 const MINO_SIZE = 20
 const LINES = 20
 const COLLUMNS = 10
@@ -27,33 +36,28 @@ class Tetromino {
         this.rotated_last = false
         this.rotation_point_5_used = false
         this.hold_enabled = true
-        this.SRS = new Map([
-            [
-                SPIN.CW,
-                [
-                    [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
-                    [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
-                    [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
-                    [[0, 0], [-1, 0], [-1, 1], [0, 2], [-1, -2]],
-                ]
+        this.SRS = {
+            "-1": [
+                [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+                [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+                [[0, 0], [-1, 0], [-1, 1], [0, 2], [-1, -2]],
             ],
-            [
-                SPIN.CCW,
-                [
-                    [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
-                    [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
-                    [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
-                    [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
-                ]
+            1: [
+                [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+                [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+                [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
             ],
-        ])
-
-    }
-    
-    draw(context) {
-        for(const pos of this.minoes_pos) {
-            draw_mino(context, this.pos[0]+pos[0], this.pos[1]+pos[1], this.color)
         }
+    }
+        
+    get abs_minoes_pos() {
+        return this.minoes_pos.map(pos => pos.add(this.pos))
+    }
+
+    draw(context) {
+        this.abs_minoes_pos.map(pos => draw_mino(context, ...pos, this.color))
     }
 }
 
@@ -79,16 +83,13 @@ class Matrix {
         this.cells = Array.from(Array(COLLUMNS), y => Array(LINES))
     }
     
-    occupied_cell(x, y) {
-        if (0 <= x && x < COLLUMNS && y < LINES)
-            return this.cells[x][y]
-        else
-            return true
+    cell_is_occupied(x, y) {
+        return 0 <= x && x < COLLUMNS && y < LINES ? this.cells[x][y] : true
     }
     
     space_to_move(piece_pos, minoes_pos) {
-        for (const mino_pos of minoes_pos) {
-            if (this.occupied_cell(piece_pos[0]+mino_pos[0], piece_pos[1]+mino_pos[1]))
+        for (const abs_mino_pos of minoes_pos.map(pos => pos.add(piece_pos))) {
+            if (this.cell_is_occupied(...abs_mino_pos))
                 return false
         }
         return true
@@ -112,23 +113,21 @@ class Matrix {
 }
 
 function move(movement) {
-    const test_pos = [tetro.pos[0]+movement[0], tetro.pos[1]+movement[1]]
+    const test_pos = tetro.pos.add(movement)
     if (matrix.space_to_move(test_pos, tetro.minoes_pos)) {
         tetro.pos = test_pos
-        draw()
     }
 }
 
 function rotate(spin) {
     const text_minoes_pos = tetro.minoes_pos.map(pos => [spin*pos[1], pos[0]])
     rotation_point = 0
-    for (const movement of tetro.SRS.get(spin)[tetro.orientation]) {
+    for (const movement of tetro.SRS[spin][tetro.orientation]) {
         const test_pos = [tetro.pos[0]+movement[0], tetro.pos[1]+movement[1]]
         if (matrix.space_to_move(test_pos, text_minoes_pos)) {
             tetro.pos = test_pos
             tetro.minoes_pos = text_minoes_pos
             tetro.orientation = (tetro.orientation + spin + 4) % 4
-            draw()
             break;
         }
         rotation_point++
@@ -166,16 +165,19 @@ function draw() {
     matrixContext.clearRect(0, 0, COLLUMNS*MINO_SIZE, LINES*MINO_SIZE);
     matrix.draw(matrixContext)
     tetro.draw(matrixContext)
+    requestAnimationFrame(draw)
 }
 
 window.onload = function() {
-    document.addEventListener("keydown", keyDownHandler, false);
-    document.addEventListener("keyup", keyUpHandler, false);
-    setInterval(fall, 1000);
 
     matrixCanvas = document.getElementById("matrix");
     matrixContext = matrixCanvas.getContext("2d");
 
     tetro = new T_Tetrimino()
     matrix = new Matrix()
+
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    setInterval(fall, 1000);
+    requestAnimationFrame(draw)
 }
