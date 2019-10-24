@@ -8,11 +8,12 @@
 </head>
 <body>
 <canvas id="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
+<scipt type="text/javascript" src="js/webtris.js" />
 <script>
 const MINO_SIZE = 20
 const LINES = 20
 const COLLUMNS = 10
-
+const INIT_POSITION = [4, -1]
 const ACTION_KEY = {
     MOVE_LEFT: "ArrowLeft",
     MOVE_RIGHT: "ArrowRight",
@@ -20,59 +21,41 @@ const ACTION_KEY = {
     ROTATE_CW: "ArrowUp",
     ROTATE_CCW: "z"
 }
-
-class Vect {
-    constructor (x, y) {
-        this.x = x
-        this.y = y
-    }
-    
-    add(other) {
-        return new Vect(this.x + other.x, this.y + other.y)
-    }
-    
-    rotate(spin) {
-        return new Vect(spin * this.y, -spin * this.x)
-    }
-}
-
-
-const INIT_POSITION = new Vect(4, -1)
-
 const MOVEMENT = {
-    LEFT: new Vect(-1, 0),
-    RIGHT: new Vect(1, 0),
-    DOWN: new Vect(0, 1)
+    LEFT: [-1, 0],
+    RIGHT: [1, 0],
+    DOWN: [0, 1]
 }
-
 const SPIN = {
-    CW: 1,
-    CCW: -1
+    CW: -1,
+    CCW: 1
 }
 
-class T {
+
+class Tetromino {
     constructor() {
         this.pos = INIT_POSITION
-        this.color = "orange"
-        this.minoes_pos = [new Vect(-1, 0), new Vect(0, 0), new Vect(1, 0), new Vect(0, 1)]
         this.orientation = 0
+        this.rotated_last = false
+        this.rotation_point_5_used = false
+        this.hold_enabled = true
         this.SRS = new Map([
             [
                 SPIN.CW,
                 [
-                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, 1), new Vect(0, -2), new Vect(-1, -2)],
-                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, -1), new Vect(0, 2), new Vect(1, 2)],
-                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, 1), new Vect(0, -2), new Vect(1, -2)],
-                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, -1), new Vect(0, -2), new Vect(-1, 2)],
+                    [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                    [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+                    [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+                    [[0, 0], [-1, 0], [-1, 1], [0, 2], [-1, -2]],
                 ]
             ],
             [
                 SPIN.CCW,
                 [
-                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, 1), new Vect(0, -2), new Vect(1, -2)],
-                    [new Vect(0, 0), new Vect(1, 0), new Vect(1, -1), new Vect(0, 2), new Vect(1, 2)],
-                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, 1), new Vect(0, -2), new Vect(-1, -2)],
-                    [new Vect(0, 0), new Vect(-1, 0), new Vect(-1, -1), new Vect(0, 2), new Vect(-1, 2)],
+                    [[0, 0], [1, 0], [1, -1], [0, 2], [1, 2]],
+                    [[0, 0], [1, 0], [1, 1], [0, -2], [1, -2]],
+                    [[0, 0], [-1, 0], [-1, -1], [0, 2], [-1, 2]],
+                    [[0, 0], [-1, 0], [-1, 1], [0, -2], [-1, -2]],
                 ]
             ],
         ])
@@ -81,9 +64,17 @@ class T {
     
     draw(context) {
         for(const pos of this.minoes_pos) {
-            const abs_pos = this.pos.add(pos)
-            draw_mino(context, abs_pos.x, abs_pos.y, this.color)
+            draw_mino(context, this.pos[0]+pos[0], this.pos[1]+pos[1], this.color)
         }
+    }
+}
+
+
+class T_Tetrimino extends Tetromino {
+    constructor() {
+        super()
+        this.color = "magenta"
+        this.minoes_pos = [[-1, 0], [0, 0], [1, 0], [0, 1]]
     }
 }
 
@@ -91,7 +82,7 @@ class T {
 function draw_mino(context, x, y, color) {
     context.fillStyle = color
     context.fillRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
-    context.strokeStyle = "white";
+    context.strokeStyle = "rgba(255, 255, 255, 128)";
     context.strokeRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
 }
 
@@ -100,24 +91,22 @@ class Matrix {
         this.cells = Array.from(Array(COLLUMNS), y => Array(LINES))
     }
     
-    occupied_cell(pos) {
-        if (0 <= pos.x && pos.x < COLLUMNS && pos.y < LINES)
-            return this.cells[pos.x][pos.y]
+    occupied_cell(x, y) {
+        if (0 <= x && x < COLLUMNS && y < LINES)
+            return this.cells[x][y]
         else
             return true
     }
     
     space_to_move(piece_pos, minoes_pos) {
         for (const mino_pos of minoes_pos) {
-            if (this.occupied_cell(piece_pos.add(mino_pos)))
+            if (this.occupied_cell(piece_pos[0]+mino_pos[0], piece_pos[1]+mino_pos[1]))
                 return false
         }
         return true
     }
     
     draw(context) {
-        // clear
-        context.clearRect(0, 0, COLLUMNS*MINO_SIZE, LINES*MINO_SIZE);
         // grid
         context.strokeStyle = "rgba(128, 128, 128, 128)";
         context.beginPath();
@@ -135,7 +124,7 @@ class Matrix {
 }
 
 function move(movement) {
-    const test_pos = tetro.pos.add(movement)
+    const test_pos = [tetro.pos[0]+movement[0], tetro.pos[1]+movement[1]]
     if (matrix.space_to_move(test_pos, tetro.minoes_pos)) {
         tetro.pos = test_pos
         draw()
@@ -143,15 +132,14 @@ function move(movement) {
 }
 
 function rotate(spin) {
-    const text_minoes_pos = Array.from(tetro.minoes_pos, pos => pos.rotate(spin))
+    const text_minoes_pos = tetro.minoes_pos.map(pos => [spin*pos[1], pos[0]])
     rotation_point = 0
     for (const movement of tetro.SRS.get(spin)[tetro.orientation]) {
-        test_pos = tetro.pos.add(movement)
-        console.log(test_pos)
+        const test_pos = [tetro.pos[0]+movement[0], tetro.pos[1]+movement[1]]
         if (matrix.space_to_move(test_pos, text_minoes_pos)) {
             tetro.pos = test_pos
             tetro.minoes_pos = text_minoes_pos
-            tetro.orientation = (tetro.orientation + spin) % 4
+            tetro.orientation = (tetro.orientation + spin + 4) % 4
             draw()
             break;
         }
@@ -187,6 +175,7 @@ function keyUpHandler(e) {
 }
 
 function draw() {
+    matrixContext.clearRect(0, 0, COLLUMNS*MINO_SIZE, LINES*MINO_SIZE);
     matrix.draw(matrixContext)
     tetro.draw(matrixContext)
 }
@@ -200,7 +189,7 @@ window.onload = function() {
 matrixCanvas = document.getElementById("matrix");
 matrixContext = matrixCanvas.getContext("2d");
 
-tetro = new T()
+tetro = new T_Tetrimino()
 matrix = new Matrix()
 
 </script>
