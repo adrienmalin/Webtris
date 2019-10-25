@@ -2,7 +2,7 @@ Array.prototype.add = function(other) {
     return this.map((x, i) => x + other[i])
 }
 Array.prototype.rotate = function(spin) {
-    return [spin*pos[1], pos[0]]
+    return [-spin*this[1], spin*this[0]]
 }
 Array.prototype.sample = function() {
     return this.splice(Math.floor(Math.random()*this.length), 1)[0]
@@ -10,10 +10,12 @@ Array.prototype.sample = function() {
 
 
 const MINO_SIZE = 20
-const MATRIX_LINES = 20
-const MATRIX_COLLUMNS = 10
 const NEXT_PIECES = 5
-const INIT_POSITION = [4, 0]
+const MATRIX_LINES = 20
+const MATRIX_COLUMNS = 10
+const HELD_PIECE_POSITION = [2, 2]
+const FALLING_PIECE_POSITION = [4, 0]
+const NEXT_PIECES_POSITIONS = Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+2])
 const LOCK_DELAY = 500
 const FALL_DELAY = 1000
 const AUTOREPEAT_DELAY = 300
@@ -24,8 +26,8 @@ const MOVEMENT = {
     DOWN: [0, 1]
 }
 const SPIN = {
-    CW: -1,
-    CCW: 1
+    CW: 1,
+    CCW: -1
 }
 const T_SPIN = {
     NULL: "",
@@ -50,7 +52,7 @@ const SCORES = [
 shapes = []
 class Tetromino {
     constructor() {
-        this.pos = INIT_POSITION
+        this.pos = FALLING_PIECE_POSITION
         this.orientation = 0
         this.rotated_last = false
         this.rotation_point_5_used = false
@@ -66,7 +68,7 @@ class Tetromino {
                 [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
                 [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
                 [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
-                [[0, 0], [-1, 0], [-1,  1], [0, -2], [-1, -2]],
+                [[0, 0], [-1, 0], [-1,  1], [0,  2], [-1, -2]],
             ],
         }
         if (!shapes.lenght)
@@ -131,52 +133,60 @@ class Tetromino {
     }
 }
 
-    
+
 function draw_mino(context, x, y, color) {
     context.fillStyle = color
-    context.fillRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
-    context.strokeStyle = "rgba(255, 255, 255, 128)";
-    context.strokeRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE);
+    context.fillRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE)
+    context.lineWidth = 0.5
+    context.strokeStyle = "white"
+    context.strokeRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE)
 }
 
+
 class Matrix {
-    constructor() {
-        this.cells = Array.from(Array(MATRIX_COLLUMNS), y => Array(MATRIX_LINES))
+    constructor(context) {
+        this.context = context
+        this.cells = Array.from({length: MATRIX_COLUMNS}, (v, k) => Array(MATRIX_LINES))
     }
     
     cell_is_occupied(x, y) {
-        return 0 <= x && x < MATRIX_COLLUMNS && y < MATRIX_LINES ? this.cells[x][y] : true
+        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_LINES ? this.cells[x][y] : true
     }
     
     space_to_move(piece_pos, minoes_pos) {
-        for (const abs_mino_pos of minoes_pos.map(pos => pos.add(piece_pos))) {
-            if (this.cell_is_occupied(...abs_mino_pos))
+        for (const pos of minoes_pos) {
+            if (this.cell_is_occupied(...pos.add(piece_pos)))
                 return false
         }
         return true
     }
     
-    draw(context) {
+    draw() {
         // grid
-        context.strokeStyle = "rgba(128, 128, 128, 128)";
-        context.beginPath();
-        for (var x = 0; x <= MATRIX_COLLUMNS*MINO_SIZE; x += MINO_SIZE) {
-            context.moveTo(x, 0);
-            context.lineTo(x, matrixCanvas.height);
+        const width = MATRIX_COLUMNS*MINO_SIZE
+        const height = MATRIX_LINES*MINO_SIZE
+        this.context.clearRect(0, 0, width, height)
+        this.context.strokeStyle = "rgba(128, 128, 128, 128)"
+        this.context.lineWidth = 0.5
+        this.context.beginPath()
+        for (var x = 0; x <= width; x += MINO_SIZE) {
+            this.context.moveTo(x, 0);
+            this.context.lineTo(x, height);
         }
-        for (var y = 0; y <= MATRIX_LINES*MINO_SIZE; y += MINO_SIZE) {
-            context.moveTo(0, y);
-            context.lineTo(matrixCanvas.width, y);
+        for (var y = 0; y <= height; y += MINO_SIZE) {
+            this.context.moveTo(0, y);
+            this.context.lineTo(width, y);
         }
-        context.stroke();
+        this.context.stroke()
+        // falling piece
+        falling_piece.draw(this.context)
     }
-
 }
 
 function move(movement) {
-    const test_pos = tetro.pos.add(movement)
-    if (matrix.space_to_move(test_pos, tetro.minoes_pos)) {
-        tetro.pos = test_pos
+    const test_pos = falling_piece.pos.add(movement)
+    if (matrix.space_to_move(test_pos, falling_piece.minoes_pos)) {
+        falling_piece.pos = test_pos
         return true
     }
     else {
@@ -185,14 +195,14 @@ function move(movement) {
 }
 
 function rotate(spin) {
-    const text_minoes_pos = tetro.minoes_pos.map(pos => [spin*pos[1], pos[0]])
+    const test_minoes_pos = falling_piece.minoes_pos.map(pos => pos.rotate(spin))
     rotation_point = 0
-    for (const movement of tetro.srs[spin==SPIN.CW?"CW":"CCW"][tetro.orientation]) {
-        const test_pos = [tetro.pos[0]+movement[0], tetro.pos[1]+movement[1]]
-        if (matrix.space_to_move(test_pos, text_minoes_pos)) {
-            tetro.pos = test_pos
-            tetro.minoes_pos = text_minoes_pos
-            tetro.orientation = (tetro.orientation - spin + 4) % 4
+    for (const movement of falling_piece.srs[spin==SPIN.CW?"CW":"CCW"][falling_piece.orientation]) {
+        const test_pos = falling_piece.pos.add(movement)
+        if (matrix.space_to_move(test_pos, test_minoes_pos)) {
+            falling_piece.pos = test_pos
+            falling_piece.minoes_pos = test_minoes_pos
+            falling_piece.orientation = (falling_piece.orientation + spin + 4) % 4
             break;
         }
         rotation_point++
@@ -261,9 +271,9 @@ function autorepeat() {
 }
 
 function keyDownHandler(e) {
-    if (!pressedKeys.has(e.key)) {
-        pressedKeys.add(e.key)
-        if (e.key in actions) {
+    if (e.key in actions) {
+        if (!pressedKeys.has(e.key)) {
+            pressedKeys.add(e.key)
             action = actions[e.key]
             action()
             if (repeatableActions.includes(action)) {
@@ -284,8 +294,8 @@ function keyDownHandler(e) {
 }
 
 function keyUpHandler(e) {
-    pressedKeys.delete(e.key)
     if (e.key in actions) {
+        pressedKeys.delete(e.key)
         action = actions[e.key]
         if (actionsToRepeat.includes(action)) {
             actionsToRepeat.splice(actionsToRepeat.indexOf(action), 1)
@@ -302,18 +312,24 @@ function keyUpHandler(e) {
 }
 
 function draw() {
-    matrixContext.clearRect(0, 0, MATRIX_COLLUMNS*MINO_SIZE, MATRIX_LINES*MINO_SIZE);
-    matrix.draw(matrixContext)
-    tetro.draw(matrixContext)
+    held_piece.draw(holdContext)
+    matrix.draw()
+    next_pieces.map(piece => piece.draw(nextContext))
     requestAnimationFrame(draw)
 }
 
 window.onload = function() {
-    matrixCanvas = document.getElementById("matrix");
-    matrixContext = matrixCanvas.getContext("2d");
+    holdContext = document.getElementById("hold").getContext("2d")
+    matrixContext = document.getElementById("matrix").getContext("2d")
+    nextContext = document.getElementById("next").getContext("2d")
 
-    matrix = new Matrix()
-    tetro = new Tetromino()
+    matrix = new Matrix(matrixContext)
+    held_piece = new Tetromino()
+    held_piece.pos = HELD_PIECE_POSITION
+    falling_piece = new Tetromino()
+    falling_piece.pos = FALLING_PIECE_POSITION
+    next_pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino())
+    next_pieces.map((piece, i, array) => piece.pos = NEXT_PIECES_POSITIONS[i])
 
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);

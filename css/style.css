@@ -1,11 +1,51 @@
  * {
-     background: #000;
-     padding: 0;
-     margin: 0;
+    padding: 0;
+    margin: 0;
+    color: white;
  }
+
+body {
+    background-image: url("../images/bg.jpg");
+    background-size: cover;
+}
  
- canvas {
-     background: #000;
-     display: block;
-     margin: 0 auto;
+canvas {
+    display: block;
+    flex-shrink: 0;
  }
+
+.columns {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.side {
+    flex-grow: 2;
+}
+
+.rows {
+    display: flex;
+    flex-direction: column;
+    margin: 5% 2%;
+}
+
+.hold {
+    max-width: 120px;
+    height: initial;
+}
+
+.stats {
+    margin: 10% 0;
+}
+
+.matrix {
+    max-width: 200px;
+    margin: 5% 2%;
+    border: 0.5px solid grey;
+}
+
+.next {
+    max-width: 120px;
+    margin: 5% 2%;
+}
