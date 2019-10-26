@@ -9,18 +9,29 @@
 </head>
 <body>
     <div class="columns">
-        <div class="side"></div>
+        <div class="space"></div>
         <div class="rows">
-            <canvas id="hold" class="hold" width="120" height="120"></canvas>
-            <div class="stats">
-                SCORE: 123123123123<br/>
-                HIGH SCORE:<br/>
-                TIME:<br/>
+            <div class="columns">
+                <div class="space"></div>
+                <canvas id="hold" class="hold" width="120" height="120"></canvas>
             </div>
+            <div class="space"></div>
+            <div class="stats">
+                <div class="stats-names">
+                    SCORE<br/>
+                    HIGH<br/>
+                    LEVEL<br/>
+                    GOAL<br/>
+                    LINES<br/>
+                    TIME<br/>
+                </div>
+                <div id="stats-values" class="stats-values"></div>
+            </div>
+
         </div>
         <canvas id="matrix" class="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
         <canvas id="next" class="next" width="120" height="400"></canvas>
-        <div class="side"></div>
+        <div class="space"></div>
     </div>
 </body>
 </html>
