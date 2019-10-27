@@ -34,6 +34,7 @@ const LOCK_DELAY = 500
 const FALL_DELAY = 1000
 const AUTOREPEAT_DELAY = 250
 const AUTOREPEAT_PERIOD = 10
+const TEMP_TEXTS_DELAY = 700
 const MOVEMENT = {
     LEFT:  [-1, 0],
     RIGHT: [ 1, 0],
@@ -64,7 +65,7 @@ const SCORES = [
 const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
 const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
 const STATE = {
-    PLAYING: "",
+    PLAYING: "PLAYING",
     PAUSED: "PAUSE",
     GAME_OVER: "GAME OVER"
 }
@@ -241,7 +242,7 @@ class HoldQueue {
 
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
-        if (state == STATE.PLAYING) {
+        if (state != STATE.PAUSED) {
             if (this.piece)
                 this.piece.draw(this.context)
         }
@@ -283,6 +284,7 @@ class Stats {
             this.level = level
         else
             this.level++
+        printTempTexts(["LEVEL", this.level])
         this.goal += 5 * this.level
         if (this.level <= 20)
             this.fallDelay = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
@@ -315,7 +317,10 @@ class Stats {
 
         this.score += pattern_score + combo_score
 
-        //console.log(pattern_name, pattern_score, this.combo, combo_score)
+        if (pattern_score)
+            printTempTexts([pattern_name, pattern_score])
+        if (combo_score)
+            printTempTexts([this.combo, combo_score])
     }
 
     print() {
@@ -334,7 +339,7 @@ class Matrix {
         this.context = context
         this.context.textAlign = "center"
         this.context.textBaseline = "center"
-        this.context.font = "4vw 'Share Tech', sans-serif"
+        this.context.font = "3vw 'Share Tech', sans-serif"
         this.cells = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.width = MATRIX_COLUMNS*MINO_SIZE
         this.height = MATRIX_ROWS*MINO_SIZE
@@ -354,21 +359,21 @@ class Matrix {
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
 
-        if (state != STATE.PAUSED) {
-            // grid
-            this.context.strokeStyle = "rgba(128, 128, 128, 128)"
-            this.context.lineWidth = 0.5
-            this.context.beginPath()
-            for (var x = 0; x <= this.width; x += MINO_SIZE) {
-                this.context.moveTo(x, 0);
-                this.context.lineTo(x, this.height);
-            }
-            for (var y = 0; y <= this.height; y += MINO_SIZE) {
-                this.context.moveTo(0, y);
-                this.context.lineTo(this.width, y);
-            }
-            this.context.stroke()
+        // grid
+        this.context.strokeStyle = "rgba(128, 128, 128, 128)"
+        this.context.lineWidth = 0.5
+        this.context.beginPath()
+        for (var x = 0; x <= this.width; x += MINO_SIZE) {
+            this.context.moveTo(x, 0);
+            this.context.lineTo(x, this.height);
+        }
+        for (var y = 0; y <= this.height; y += MINO_SIZE) {
+            this.context.moveTo(0, y);
+            this.context.lineTo(this.width, y);
+        }
+        this.context.stroke()
 
+        if (state != STATE.PAUSED) {
             // ghost position
             for (var ghost_pos = Array.from(this.piece.pos); this.spaceToMove(this.piece.minoesPos.translate(ghost_pos)); ghost_pos[1]++) {}
             ghost_pos[1]--
@@ -384,17 +389,31 @@ class Matrix {
         }
 
         // text
-        if (state == STATE.PLAYING) {
-
+        var texts = []
+        switch(state) {
+            case STATE.PLAYING:
+                if (tempTexts.length)
+                    texts = tempTexts[0]
+                break
+            case STATE.PAUSED:
+                texts = ["PAUSED"]
+                break
+            case STATE.GAME_OVER:
+                texts = ["GAME", "OVER"]
         }
-        else {
+        if (texts.length) {
             this.context.save()
             this.context.shadowColor = "black"
             this.context.shadowOffsetX = 1
             this.context.shadowOffsetY = 1
             this.context.shadowBlur = 2
             this.context.fillStyle = "white"
-            this.context.fillText(state, this.centerX, this.centerY)
+            if (texts.length == 1)
+                this.context.fillText(texts[0], this.centerX, this.centerY)
+            else {
+                this.context.fillText(texts[0], this.centerX, this.centerY - 20)
+                this.context.fillText(texts[1], this.centerX, this.centerY + 20)
+            }
             this.context.restore()
         }
     }
@@ -411,7 +430,7 @@ class NextQueue {
 
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
-        if (state == STATE.PLAYING) {
+        if (state != STATE.PAUSED) {
             this.pieces.forEach(piece => piece.draw(this.context))
         }
     }
@@ -457,10 +476,12 @@ function move(movement, lock=true, testMinoesPos=matrix.piece.minoesPos) {
             matrix.piece.rotatedLast = false
         if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos.add(MOVEMENT.DOWN))))
             fallingPhase()
-        else if (lock) {
-            matrix.piece.locked = true
+        else {
             scheduler.clearTimeout(locksDown)
-            scheduler.setTimeout(locksDown, stats.lockDelay)
+            if (lock) {
+                matrix.piece.locked = true
+                scheduler.setTimeout(locksDown, stats.lockDelay)
+            }
         }
         return true
     }
@@ -638,6 +659,17 @@ function pause() {
     }
 }
 
+function printTempTexts(texts) {
+    tempTexts.push(texts)
+    console.log(tempTexts)
+    scheduler.setTimeout(delTempTexts, TEMP_TEXTS_DELAY)
+}
+
+function delTempTexts(self) {
+    if (tempTexts.length)
+        tempTexts.shift()
+}
+
 function draw() {
     holdQueue.draw()
     stats.print()
@@ -654,6 +686,7 @@ window.onload = function() {
     matrix = new Matrix(document.getElementById("matrix").getContext("2d"))
     nextQueue = new NextQueue(document.getElementById("next").getContext("2d"))
     scheduler = new Scheduler()
+    tempTexts = []
 
     actions = {
         "ArrowLeft":    moveLeft,
