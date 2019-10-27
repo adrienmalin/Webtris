@@ -310,32 +310,33 @@ class Stats {
     }
 
     locksDown(tSpin, linesCleared) {
-        var pattern_name = []
-        var pattern_score = 0
+        var patternName = []
+        var patternScore = 0
         var combo_score = 0
         
         if (tSpin)
-            pattern_name.push(tSpin)
+            patternName.push(tSpin)
         if (linesCleared) {
-            pattern_name.push(SCORES[linesCleared].linesClearedName)
+            patternName.push(SCORES[linesCleared].linesClearedName)
             this.combo++
         }
         else
             this.combo = -1
 
         if (linesCleared || tSpin) {
-            pattern_score = SCORES[linesCleared][tSpin]
-            this.goal -= pattern_score
-            pattern_score *= 100 * this.level
-            pattern_name = pattern_name.join("\n")
+            this.linesCleared += linesCleared
+            patternScore = SCORES[linesCleared][tSpin]
+            this.goal -= patternScore
+            patternScore *= 100 * this.level
+            patternName = patternName.join("\n")
         }
         if (this.combo >= 1)
             combo_score = (linesCleared == 1 ? 20 : 50) * this.combo * this.level
 
-        this.score += pattern_score + combo_score
+        this.score += patternScore + combo_score
 
-        if (pattern_score)
-            printTempTexts([pattern_name, pattern_score])
+        if (patternScore)
+            printTempTexts([patternName, patternScore])
         if (combo_score)
             printTempTexts([`COMBO x${this.combo}`, combo_score])
     }
