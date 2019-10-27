@@ -3,35 +3,26 @@
 <head>
     <meta charset="utf-8" />
     <title>Webtris</title>
-    <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <!--[if lt IE 9]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
-    <script type="text/javascript" src="js/webtris.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
 </head>
 <body>
-    <div class="columns">
-        <div class="space"></div>
-        <div class="rows">
-            <div class="columns">
-                <div class="space"></div>
-                <canvas id="hold" class="hold" width="120" height="120"></canvas>
+    <h1>WEBTRIS</h1>
+    <form action="webtris.html" method="post">
+        <div class="actions">
+            <div>GAUCHE</div><button type="button">ArrowLeft</button>
+            <div>DROITE</div><button type="button">ArrowRight</button>
+            <div>CHUTE LENTE</div><button type="button">ArrowDown</button>
+            <div>CHUTE RAPIDE</div><button type="button">Space</button>
+            <div>ROTATION HORAIRE</div><button type="button">ArrowUp</button>
+            <div>ROTATION INVERSE</div><button type="button">z</button>
+            <div>GARDE</div><button type="button">c</button>
+            <div>PAUSE</div><button type="button">Escape</button>
+            <div class="cookie">
+                <input type="checkbox" id="cookie" name="cookie">
+                <label for="cookie">Utiliser un cookie pour enregistrer les préférences sur cet ordinateur ?</label>
             </div>
-            <div class="space"></div>
-            <div class="stats">
-                <div class="stats-names">
-                    SCORE<br/>
-                    HIGH<br/>
-                    LEVEL<br/>
-                    GOAL<br/>
-                    LINES<br/>
-                    TIME<br/>
-                </div>
-                <div id="stats-values" class="stats-values"></div>
-            </div>
-
+            <button type="submit" class="play">PLAY</button>
         </div>
-        <canvas id="matrix" class="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
-        <canvas id="next" class="next" width="120" height="400"></canvas>
-        <div class="space"></div>
-    </div>
+    </form>
 </body>
 </html>

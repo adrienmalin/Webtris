@@ -413,7 +413,6 @@ class Matrix {
                 this.piece.draw(this.context, ghost_pos)
 
             // Lines cleared
-            console.log(this.linesCleared.length)
             if (this.linesCleared.length) {
                 this.context.save()
                 this.context.shadowColor = "white"
