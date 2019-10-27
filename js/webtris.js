@@ -65,8 +65,8 @@ const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
 const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
 const STATE = {
     PLAYING: "",
-    PAUSE: "PAUSE",
-    GAME_OVER: "GAME\nOVER"
+    PAUSED: "PAUSE",
+    GAME_OVER: "GAME OVER"
 }
 
 
@@ -241,8 +241,10 @@ class HoldQueue {
 
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
-        if (this.piece)
-            this.piece.draw(this.context)
+        if (state == STATE.PLAYING) {
+            if (this.piece)
+                this.piece.draw(this.context)
+        }
     }
 }
 
@@ -260,6 +262,7 @@ class Stats {
         this.goal = 0
         this.linesCleared = 0
         this.startTime = Date.now()
+        this.pauseTime = 0
         this.combo = -1
         this.lockDelay = LOCK_DELAY
         this.fallDelay = FALL_DELAY
@@ -329,9 +332,14 @@ class Stats {
 class Matrix {
     constructor(context) {
         this.context = context
+        this.context.textAlign = "center"
+        this.context.textBaseline = "center"
+        this.context.font = "4vw 'Share Tech', sans-serif"
         this.cells = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.width = MATRIX_COLUMNS*MINO_SIZE
         this.height = MATRIX_ROWS*MINO_SIZE
+        this.centerX = this.width / 2
+        this.centerY = this.height / 2
         this.piece = null
     }
     
@@ -346,32 +354,49 @@ class Matrix {
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
 
-        // grid
-        this.context.strokeStyle = "rgba(128, 128, 128, 128)"
-        this.context.lineWidth = 0.5
-        this.context.beginPath()
-        for (var x = 0; x <= this.width; x += MINO_SIZE) {
-            this.context.moveTo(x, 0);
-            this.context.lineTo(x, this.height);
-        }
-        for (var y = 0; y <= this.height; y += MINO_SIZE) {
-            this.context.moveTo(0, y);
-            this.context.lineTo(this.width, y);
-        }
-        this.context.stroke()
+        if (state != STATE.PAUSED) {
+            // grid
+            this.context.strokeStyle = "rgba(128, 128, 128, 128)"
+            this.context.lineWidth = 0.5
+            this.context.beginPath()
+            for (var x = 0; x <= this.width; x += MINO_SIZE) {
+                this.context.moveTo(x, 0);
+                this.context.lineTo(x, this.height);
+            }
+            for (var y = 0; y <= this.height; y += MINO_SIZE) {
+                this.context.moveTo(0, y);
+                this.context.lineTo(this.width, y);
+            }
+            this.context.stroke()
 
-        // ghost position
-        for (var ghost_pos = Array.from(this.piece.pos); this.spaceToMove(this.piece.minoesPos.translate(ghost_pos)); ghost_pos[1]++) {}
-        ghost_pos[1]--
+            // ghost position
+            for (var ghost_pos = Array.from(this.piece.pos); this.spaceToMove(this.piece.minoesPos.translate(ghost_pos)); ghost_pos[1]++) {}
+            ghost_pos[1]--
 
-        // locked minoes
-        this.cells.slice(3).forEach((row, y) => row.forEach((colors, x) => {
-            if (colors) drawMino(this.context, [x, y], ...colors, ghost_pos)
-        }))
-        
-        // falling piece
-        if (this.piece)
-            this.piece.draw(this.context, ghost_pos)
+            // locked minoes
+            this.cells.slice(3).forEach((row, y) => row.forEach((colors, x) => {
+                if (colors) drawMino(this.context, [x, y], ...colors, ghost_pos)
+            }))
+            
+            // falling piece
+            if (this.piece)
+                this.piece.draw(this.context, ghost_pos)
+        }
+
+        // text
+        if (state == STATE.PLAYING) {
+
+        }
+        else {
+            this.context.save()
+            this.context.shadowColor = "black"
+            this.context.shadowOffsetX = 1
+            this.context.shadowOffsetY = 1
+            this.context.shadowBlur = 2
+            this.context.fillStyle = "white"
+            this.context.fillText(state, this.centerX, this.centerY)
+            this.context.restore()
+        }
     }
 }
 
@@ -386,7 +411,9 @@ class NextQueue {
 
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
-        this.pieces.forEach(piece => piece.draw(this.context))
+        if (state == STATE.PLAYING) {
+            this.pieces.forEach(piece => piece.draw(this.context))
+        }
     }
 }
 
@@ -502,7 +529,6 @@ function gameOver() {
     state = STATE.GAME_OVER
     scheduler.clearTimeout(lockPhase)
     scheduler.clearTimeout(locksDown)
-    console.log("GAME OVER")
 }
 
 function autorepeat() {
@@ -594,13 +620,31 @@ function hold() {
     }
 }
 
+function pause() {
+    if (state == STATE.PLAYING) {
+        state = STATE.PAUSED
+        stats.pauseTime = Date.now() - stats.startTime
+        scheduler.clearTimeout(lockPhase)
+        scheduler.clearTimeout(locksDown)
+        scheduler.clearTimeout(autorepeat)
+    }
+    else if (state == STATE.PAUSED) {
+        state = STATE.PLAYING
+        stats.startTime = Date.now() - stats.pauseTime
+        scheduler.setTimeout(lockPhase, stats.fallDelay)
+        if (matrix.piece.locked)
+            scheduler.setTimeout(locksDown, stats.lockDelay)
+        requestAnimationFrame(draw)
+    }
+}
+
 function draw() {
     holdQueue.draw()
     stats.print()
     matrix.draw()
     nextQueue.draw()
 
-    if (state != STATE.GAME_OVER)
+    if (state == STATE.PLAYING)
         requestAnimationFrame(draw)
 }
 
@@ -618,7 +662,8 @@ window.onload = function() {
         " ":            hardDrop,
         "ArrowUp":      rotateCW,
         "z":            rotateCCW,
-        "c":            hold
+        "c":            hold,
+        "Escape":       pause
     }
     pressedKeys = new Set()
     actionsToRepeat = []
