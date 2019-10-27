@@ -320,7 +320,7 @@ class Stats {
         if (pattern_score)
             printTempTexts([pattern_name, pattern_score])
         if (combo_score)
-            printTempTexts([this.combo, combo_score])
+            printTempTexts(["COMBO x" + this.combo, combo_score])
     }
 
     print() {
@@ -661,13 +661,15 @@ function pause() {
 
 function printTempTexts(texts) {
     tempTexts.push(texts)
-    console.log(tempTexts)
-    scheduler.setTimeout(delTempTexts, TEMP_TEXTS_DELAY)
+    if (!scheduler.intervalTasks.has(delTempTexts))
+        scheduler.setInterval(delTempTexts, TEMP_TEXTS_DELAY)
 }
 
 function delTempTexts(self) {
     if (tempTexts.length)
         tempTexts.shift()
+    else
+        scheduler.clearInterval(delTempTexts)
 }
 
 function draw() {
