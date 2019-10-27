@@ -70,21 +70,16 @@ const STATE = {
     PAUSED: "PAUSE",
     GAME_OVER: "GAME OVER"
 }
-var ACTIONS = {}
-ACTIONS[STATE.PLAYING] = {
-    "ArrowLeft":    moveLeft,
-    "ArrowRight":   moveRight,
-    "ArrowDown":    softDrop,
-    " ":            hardDrop,
-    "ArrowUp":      rotateCW,
-    "z":            rotateCCW,
-    "c":            hold,
-    "Escape":       pause
+const actionsDefaultKeys = {
+    moveLeft: "ArrowLeft",
+    moveRight: "ArrowRight",
+    softDrop: "ArrowDown",
+    hardDrop: " ",
+    rotateCW: "ArrowUp",
+    rotateCCW: "z",
+    hold: "c",
+    pause: "Escape",
 }
-ACTIONS[STATE.PAUSED] = {
-    "Escape":        resume
-}
-ACTIONS[STATE.GAME_OVER] = {}
 
 
 class Scheduler {
@@ -630,8 +625,8 @@ function autorepeat() {
 function keyDownHandler(e) {
     if (!pressedKeys.has(e.key)) {
         pressedKeys.add(e.key)
-        if (e.key in ACTIONS[state]) {
-            action = ACTIONS[state][e.key]
+        if (e.key in actions[state]) {
+            action = actions[state][e.key]
             action()
             requestAnimationFrame(draw)
             if (REPEATABLE_ACTIONS.includes(action)) {
@@ -650,8 +645,8 @@ function keyDownHandler(e) {
 
 function keyUpHandler(e) {
     pressedKeys.delete(e.key)
-    if (e.key in ACTIONS[state]) {
-        action = ACTIONS[state][e.key]
+    if (e.key in actions[state]) {
+        action = actions[state][e.key]
         if (actionsToRepeat.includes(action)) {
             actionsToRepeat.splice(actionsToRepeat.indexOf(action), 1)
             if (!actionsToRepeat.length) {
@@ -757,6 +752,12 @@ function draw() {
     nextQueue.draw()
 }
 
+function getKey(action) {
+    return localStorage.getItem(action) || actionsDefaultKeys[action]
+}
+
+var actions = {}
+
 window.onload = function() {
     tempTexts = []
 
@@ -765,6 +766,18 @@ window.onload = function() {
     matrix = new Matrix()
     nextQueue = new NextQueue()
     
+    actions[STATE.PLAYING] = {}
+    actions[STATE.PLAYING][getKey("moveLeft")] = moveLeft
+    actions[STATE.PLAYING][getKey("moveRight")] = moveRight
+    actions[STATE.PLAYING][getKey("softDrop")] = softDrop
+    actions[STATE.PLAYING][getKey("hardDrop")] = hardDrop
+    actions[STATE.PLAYING][getKey("rotateCW")] = rotateCW
+    actions[STATE.PLAYING][getKey("rotateCCW")] = rotateCCW
+    actions[STATE.PLAYING][getKey("hold")] = hold
+    actions[STATE.PLAYING][getKey("pause")] = pause
+    actions[STATE.PAUSED] = {}
+    actions[STATE.PAUSED][getKey("pause")] = resume
+    actions[STATE.GAME_OVER] = {}
     pressedKeys = new Set()
     actionsToRepeat = []
     addEventListener("keydown", keyDownHandler, false)
