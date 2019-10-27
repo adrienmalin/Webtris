@@ -56,6 +56,7 @@ const T_SLOT = {
     C: 3,
     D: 2
 }
+const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
 const SCORES = [
     {linesClearedName: "",       "": 0, "MINI\nT-SPIN": 1, "T-SPIN": 4},
     {linesClearedName: "SINGLE", "": 1, "MINI\nT-SPIN": 2, "T-SPIN": 8},
@@ -64,7 +65,6 @@ const SCORES = [
     {linesClearedName: "TETRIS", "": 8},
 ]
 const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
-const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
 const STATE = {
     PLAYING: "PLAYING",
     PAUSED: "PAUSE",
@@ -413,6 +413,7 @@ class Matrix {
                 this.piece.draw(this.context, ghost_pos)
 
             // Lines cleared
+            console.log(this.linesCleared.length)
             if (this.linesCleared.length) {
                 this.context.save()
                 this.context.shadowColor = "white"
@@ -554,9 +555,9 @@ function locksDown(){
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
-        const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(pos))
         if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
-            const a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
+            const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(pos)),
+                  a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
                   b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
                   c = tSlots[(matrix.piece.orientation+T_SLOT.C)%4],
                   d = tSlots[(matrix.piece.orientation+T_SLOT.D)%4]
@@ -575,9 +576,10 @@ function locksDown(){
                 matrix.linesCleared.push((y-3) * MINO_SIZE)
             }
         })
-        scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
         stats.locksDown(tSpin, matrix.linesCleared.length)
+        requestAnimationFrame(draw)
+        scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
         if (stats.goal <= 0)
             newLevel()
@@ -588,6 +590,7 @@ function locksDown(){
 
 function clearLinesCleared() {
     matrix.linesCleared = []
+    requestAnimationFrame(draw)
 }
 
 function gameOver() {
