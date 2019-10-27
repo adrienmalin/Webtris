@@ -80,6 +80,7 @@ const actionsDefaultKeys = {
     hold: "c",
     pause: "Escape",
 }
+var actions = {}
 
 
 class Scheduler {
@@ -755,8 +756,6 @@ function draw() {
 function getKey(action) {
     return localStorage.getItem(action) || actionsDefaultKeys[action]
 }
-
-var actions = {}
 
 window.onload = function() {
     tempTexts = []

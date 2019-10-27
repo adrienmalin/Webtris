@@ -53,12 +53,11 @@ canvas {
     flex-direction: column;
     margin: 5% 2%;
     height: 400px;
+    width: 150px;
 }
 
 .hold {
     width: 120px;
-    flex-grow: 0;
-    justify-content: right;
 }
 
 .stats {

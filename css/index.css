@@ -42,7 +42,10 @@ button {
 
 .play {
     grid-column: 2 / 4;
-    justify-self: center;
+    text-align: center;
+    text-decoration: none;
+    text-shadow: 2px 1px rgb(153, 145, 175);
+    font-size: 1.5em;
     width: 70%;
     margin: 40px;
 }
