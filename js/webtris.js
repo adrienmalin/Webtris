@@ -607,8 +607,9 @@ function keyDownHandler(e) {
                 actionsToRepeat.unshift(action)
                 scheduler.clearTimeout(autorepeat)
                 scheduler.clearInterval(autorepeat)
-                if (actionsToRepeat == softDrop)
-                    scheduler.setInterval(autorepeat, FALL_DELAY / 20)
+                if (action == softDrop) {
+                    scheduler.setInterval(autorepeat, stats.fallDelay / 20)
+                }
                 else
                     scheduler.setTimeout(autorepeat, AUTOREPEAT_DELAY)
             }
