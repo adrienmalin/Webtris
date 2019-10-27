@@ -271,8 +271,7 @@ class Stats {
     constructor () {
         this.div = document.getElementById("stats-values")
         this._score = 0
-        this.lastHighScore = localStorage.getItem('highScore') || 0
-        this.highScore = this.lastHighScore
+        this.highScore = localStorage.getItem('highScore') || 0
         this.goal = 0
         this.linesCleared = 0
         this.startTime = Date.now()
@@ -602,8 +601,8 @@ function gameOver() {
     scheduler.clearInterval(clock)
     requestAnimationFrame(draw)
 
-    if (stats.score > stats.lastHighScore) {
-        alert("Bravo ! Vous avez battu votre meilleur score.")
+    if (stats.score == stats.highScore) {
+        alert("Bravo ! Vous avez battu votre précédent record.")
         localStorage.setItem('highScore', stats.highScore)
     }
 }
