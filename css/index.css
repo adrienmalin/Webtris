@@ -7,8 +7,6 @@
 }
  
 * {
-    padding: 0;
-    margin: 0;
     color: white;
     font-family: 'Share Tech';
     font-size: 1.05em;
@@ -31,6 +29,11 @@ button {
     width: 100%;
 }
 
+a {
+    color: lightcyan;
+    text-decoration: none;
+}
+
 .actions {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -41,11 +44,7 @@ button {
 }
 
 .play {
-    grid-column: 2 / 4;
     text-align: center;
-    text-decoration: none;
     text-shadow: 2px 1px rgb(153, 145, 175);
     font-size: 1.5em;
-    width: 70%;
-    margin: 40px;
 }

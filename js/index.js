@@ -29,14 +29,10 @@ function getKey(action) {
         return key
 }
 
-function loadButtons() {
-    document.open()
-    document.write(
-        actionLabel.map(action => `<div>${action.label}</div>
+window.onload = function() {
+    document.getElementById("actions").innerHTML = actionLabel.map(action => `<div>${action.label}</div>
 <button type="button" onclick="changeKey(this, '${action.name}')">${getKey(action.name)}</button>
 `).join("\n")
-    )
-    document.close()
 }
 
 function changeKey(button, action) {
