@@ -69,6 +69,21 @@ const STATE = {
     PAUSED: "PAUSE",
     GAME_OVER: "GAME OVER"
 }
+var ACTIONS = {}
+ACTIONS[STATE.PLAYING] = {
+    "ArrowLeft":    moveLeft,
+    "ArrowRight":   moveRight,
+    "ArrowDown":    softDrop,
+    " ":            hardDrop,
+    "ArrowUp":      rotateCW,
+    "z":            rotateCCW,
+    "c":            hold,
+    "Escape":       pause
+}
+ACTIONS[STATE.PAUSED] = {
+    "Escape":        resume
+}
+ACTIONS[STATE.GAME_OVER] = {}
 
 
 class Scheduler {
@@ -465,6 +480,7 @@ function fallingPhase() {
 function lockPhase() {
     if (!move(MOVEMENT.DOWN))
         locksDown()
+    requestAnimationFrame(draw)
 }
 
 function move(movement, lock=true, testMinoesPos=matrix.piece.minoesPos) {
@@ -550,11 +566,14 @@ function gameOver() {
     state = STATE.GAME_OVER
     scheduler.clearTimeout(lockPhase)
     scheduler.clearTimeout(locksDown)
+    scheduler.clearInterval(clock)
+    requestAnimationFrame(draw)
 }
 
 function autorepeat() {
     if (actionsToRepeat.length) {
         actionsToRepeat[0]()
+        requestAnimationFrame(draw)
         if (scheduler.timeoutTasks.has(autorepeat)) {
             scheduler.clearTimeout(autorepeat)
             scheduler.setInterval(autorepeat, AUTOREPEAT_PERIOD)
@@ -567,11 +586,12 @@ function autorepeat() {
 }
 
 function keyDownHandler(e) {
-    if (e.key in actions) {
-        if (!pressedKeys.has(e.key)) {
-            pressedKeys.add(e.key)
-            action = actions[e.key]
+    if (!pressedKeys.has(e.key)) {
+        pressedKeys.add(e.key)
+        if (e.key in ACTIONS[state]) {
+            action = ACTIONS[state][e.key]
             action()
+            requestAnimationFrame(draw)
             if (REPEATABLE_ACTIONS.includes(action)) {
                 actionsToRepeat.unshift(action)
                 scheduler.clearTimeout(autorepeat)
@@ -586,9 +606,9 @@ function keyDownHandler(e) {
 }
 
 function keyUpHandler(e) {
-    if (e.key in actions) {
-        pressedKeys.delete(e.key)
-        action = actions[e.key]
+    pressedKeys.delete(e.key)
+    if (e.key in ACTIONS[state]) {
+        action = ACTIONS[state][e.key]
         if (actionsToRepeat.includes(action)) {
             actionsToRepeat.splice(actionsToRepeat.indexOf(action), 1)
             if (!actionsToRepeat.length) {
@@ -642,21 +662,22 @@ function hold() {
 }
 
 function pause() {
-    if (state == STATE.PLAYING) {
-        state = STATE.PAUSED
-        stats.pauseTime = Date.now() - stats.startTime
-        scheduler.clearTimeout(lockPhase)
-        scheduler.clearTimeout(locksDown)
-        scheduler.clearTimeout(autorepeat)
-    }
-    else if (state == STATE.PAUSED) {
-        state = STATE.PLAYING
-        stats.startTime = Date.now() - stats.pauseTime
-        scheduler.setTimeout(lockPhase, stats.fallDelay)
-        if (matrix.piece.locked)
-            scheduler.setTimeout(locksDown, stats.lockDelay)
-        requestAnimationFrame(draw)
-    }
+    state = STATE.PAUSED
+    stats.pauseTime = Date.now() - stats.startTime
+    scheduler.clearTimeout(lockPhase)
+    scheduler.clearTimeout(locksDown)
+    scheduler.clearTimeout(autorepeat)
+    scheduler.clearInterval(clock)
+}
+
+function resume() {
+    state = STATE.PLAYING
+    stats.startTime = Date.now() - stats.pauseTime
+    scheduler.setTimeout(lockPhase, stats.fallDelay)
+    if (matrix.piece.locked)
+        scheduler.setTimeout(locksDown, stats.lockDelay)
+    requestAnimationFrame(draw)
+    scheduler.setInterval(clock, 1000)
 }
 
 function printTempTexts(texts) {
@@ -672,40 +693,32 @@ function delTempTexts(self) {
         scheduler.clearInterval(delTempTexts)
 }
 
+function clock() {
+    stats.print()
+}
+
 function draw() {
     holdQueue.draw()
     stats.print()
     matrix.draw()
     nextQueue.draw()
-
-    if (state == STATE.PLAYING)
-        requestAnimationFrame(draw)
 }
 
 window.onload = function() {
+    tempTexts = []
+
     holdQueue = new HoldQueue(document.getElementById("hold").getContext("2d"))
     stats = new Stats(document.getElementById("stats-values"))
     matrix = new Matrix(document.getElementById("matrix").getContext("2d"))
     nextQueue = new NextQueue(document.getElementById("next").getContext("2d"))
-    scheduler = new Scheduler()
-    tempTexts = []
-
-    actions = {
-        "ArrowLeft":    moveLeft,
-        "ArrowRight":   moveRight,
-        "ArrowDown":    softDrop,
-        " ":            hardDrop,
-        "ArrowUp":      rotateCW,
-        "z":            rotateCCW,
-        "c":            hold,
-        "Escape":       pause
-    }
+    
     pressedKeys = new Set()
     actionsToRepeat = []
     addEventListener("keydown", keyDownHandler, false)
     addEventListener("keyup", keyUpHandler, false)
-    requestAnimationFrame(draw)
 
     state = STATE.PLAYING
+    scheduler = new Scheduler()
+    scheduler.setInterval(clock, 1000)
     this.newLevel(1)
 }
