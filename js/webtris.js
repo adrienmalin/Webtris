@@ -562,7 +562,7 @@ function locksDown(){
         // T-Spin detection
         var tSpin = T_SPIN.NONE
         if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
-            const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(pos)),
+            const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(...pos)),
                   a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
                   b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
                   c = tSlots[(matrix.piece.orientation+T_SLOT.C)%4],
