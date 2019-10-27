@@ -53,7 +53,7 @@ canvas {
 
 .stats-values {
     text-align: right;
-    min-width: 80px;
+    min-width: 100px;
 }
 
 .matrix {

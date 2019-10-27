@@ -1,13 +1,20 @@
 Array.prototype.add = function(other) {
     return this.map((x, i) => x + other[i])
 }
+
+Array.prototype.mul = function(k) {
+    return this.map(x => k * x)
+}
+
 Array.prototype.translate = function(vector) {
     return this.map(pos => pos.add(vector))
 }
+
 Array.prototype.rotate = function(spin) {
     return [-spin*this[1], spin*this[0]]
 }
-Array.prototype.sample = function() {
+
+Array.prototype.pick = function() {
     return this.splice(Math.floor(Math.random()*this.length), 1)[0]
 }
 
@@ -25,7 +32,7 @@ const FALLING_PIECE_POSITION = [4, 0]
 const NEXT_PIECES_POSITIONS = Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+2])
 const LOCK_DELAY = 500
 const FALL_DELAY = 1000
-const AUTOREPEAT_DELAY = 300
+const AUTOREPEAT_DELAY = 250
 const AUTOREPEAT_PERIOD = 10
 const MOVEMENT = {
     LEFT:  [-1, 0],
@@ -37,7 +44,7 @@ const SPIN = {
     CCW: -1
 }
 const T_SPIN = {
-    NULL: "",
+    NONE: "",
     MINI: "MINI\nT-SPIN",
     T_SPIN: "T-SPIN"
 }
@@ -48,13 +55,19 @@ const T_SLOT = {
     D: 2
 }
 const SCORES = [
-    {LINES_CLEAR_NAME: "", NO_T_SPIN: 0, MINI_T_SPIN: 1, T_SPIN: 4},
-    {LINES_CLEAR_NAME: "SINGLE", NO_T_SPIN: 1, MINI_T_SPIN: 2, T_SPIN: 8},
-    {LINES_CLEAR_NAME: "DOUBLE", NO_T_SPIN: 3, T_SPIN: 12},
-    {LINES_CLEAR_NAME: "TRIPLE", NO_T_SPIN: 5, T_SPIN: 16},
-    {LINES_CLEAR_NAME: "TETRIS", NO_T_SPIN: 8},
+    {linesClearedName: "",       "": 0, "MINI\nT-SPIN": 1, "T-SPIN": 4},
+    {linesClearedName: "SINGLE", "": 1, "MINI\nT-SPIN": 2, "T-SPIN": 8},
+    {linesClearedName: "DOUBLE", "": 3, "T-SPIN": 12},
+    {linesClearedName: "TRIPLE", "": 5, "T-SPIN": 16},
+    {linesClearedName: "TETRIS", "": 8},
 ]
 const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
+const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+const STATE = {
+    PLAYING: "",
+    PAUSE: "PAUSE",
+    GAME_OVER: "GAME\nOVER"
+}
 
 
 class Scheduler {
@@ -63,12 +76,12 @@ class Scheduler {
         this.timeoutTasks = new Map()
     }
 
-    setInterval(func, delay) {
-        this.intervalTasks.set(func, window.setInterval(func, delay))
+    setInterval(func, delay, ...args) {
+        this.intervalTasks.set(func, window.setInterval(func, delay, ...args))
     }
 
-    setTimeout(func, delay) {
-        this.timeoutTasks.set(func, window.setTimeout(func, delay))
+    setTimeout(func, delay, ...args) {
+        this.timeoutTasks.set(func, window.setTimeout(func, delay, ...args))
     }
 
     clearInterval(func) {
@@ -95,109 +108,126 @@ class Tetromino {
         this.rotatedLast = false
         this.rotationPoint5Used = false
         this.holdEnabled = true
-        this.srs = {
-            CW: [
-                [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
-                [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
-                [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
-                [[0, 0], [-1, 0], [-1,  1], [0,  2], [-1, -2]],
-            ],
-            CCW: [
-                [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
-                [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
-                [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
-                [[0, 0], [-1, 0], [-1,  1], [0,  2], [-1, -2]],
-            ],
-        }
+        this.locked = false
+        this.srs = {}
+        this.srs[SPIN.CW] = [
+            [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
+            [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
+            [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
+            [[0, 0], [-1, 0], [-1,  1], [0, -2], [-1, -2]],
+        ]
+        this.srs[SPIN.CCW] = [
+            [[0, 0], [ 1, 0], [ 1, -1], [0,  2], [ 1,  2]],
+            [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
+            [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
+            [[0, 0], [-1, 0], [-1,  1], [0,  2], [-1, -2]],
+        ]
         if (shape)
             this.shape = shape
         else {
             if (!shapes.length)
                 shapes = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
-            this.shape = shapes.sample()
+            this.shape = shapes.pick()
         }
         switch(this.shape) {
             case 'I':
-                this.color = "rgb(132, 225, 225)"
-                this.ghostColor = "rgba(40, 164, 164, 0.5)"
+                this.color = "cyan"
+                this.lightColor = "rgb(234, 250, 250)"
+                this.ghostColor = "rgba(234, 250, 250, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [2, 0]]
-                this.srs = {
-                    CW: [
-                        [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
-                        [[ 0,  1], [-1,  1], [ 2,  1], [-1, -1], [ 2,  2]],
-                        [[-1,  0], [ 1,  0], [-2,  0], [ 1, -1], [-2,  2]],
-                        [[ 0,  1], [ 1, -1], [-2, -1], [ 1,  1], [-2, -2]],
-                    ],
-                    CCW: [
-                        [[ 0,  1], [-1,  1], [ 2,  1], [-1, -1], [ 2,  2]],
-                        [[-1,  0], [ 1,  0], [-2,  0], [ 1, -1], [-2,  2]],
-                        [[ 0, -1], [ 1, -1], [-2, -1], [ 1,  1], [-2, -2]],
-                        [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
-                    ],
-                }
+                this.srs[SPIN.CW] = [
+                    [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
+                    [[ 0,  1], [-1,  1], [ 2,  1], [-1, -1], [ 2,  2]],
+                    [[-1,  0], [ 1,  0], [-2,  0], [ 1, -1], [-2,  2]],
+                    [[ 0,  1], [ 1, -1], [-2, -1], [ 1,  1], [-2, -2]],
+                ]
+                this.srs[SPIN.CCW] = [
+                    [[ 0,  1], [-1,  1], [ 2,  1], [-1, -1], [ 2,  2]],
+                    [[-1,  0], [ 1,  0], [-2,  0], [ 1, -1], [-2,  2]],
+                    [[ 0, -1], [ 1, -1], [-2, -1], [ 1,  1], [-2, -2]],
+                    [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
+                ]
                 break
             case 'J':
-                this.color = "rgb(102, 163, 255)"
-                this.ghostColor = "rgba(0, 82, 204, 0.5)"
+                this.color = "blue"
+                this.lightColor = "rgb(230, 240, 255)"
+                this.ghostColor = "rgba(230, 240, 255, 0.5)"
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
                 break
             case 'L':
-                this.color = "rgb(255, 148, 77)"
-                this.ghostColor = "rgba(204, 82, 0, 0.5)"
+                this.color = "orange"
+                this.lightColor = "rgb(255, 224, 204)"
+                this.ghostColor = "rgba(255, 224, 204, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
                 break
             case 'O':
-                this.color = "rgb(255, 255, 102)"
-                this.ghostColor = "rgba(204, 204, 0, 0.5)"
+                this.color = "yellow"
+                this.lightColor = "rgb(255, 255, 230)"
+                this.ghostColor = "rgba(255, 255, 230, 0.5)"
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
-                this.srs = {
-                    CW: [[]],
-                    CCW: [[]]
-                }
+                this.srs[SPIN.CW] = [[]]
+                this.srs[SPIN.CCW] = [[]]
                 break
             case 'S':
-                this.color = "rgb(159, 255, 128)"
-                this.ghostColor = "rgb(38, 153, 0, 0.5)"
-                this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
+                this.color = "green"
+                this.lightColor = "rgb(236, 255, 230)"
+                this.ghostColor = "rgba(236, 255, 230, 0.5)"
+                this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
                 break
             case 'T':
-                this.color = "rgb(179, 102, 255)"
-                this.ghostColor = "rgba(102, 0, 204, 0.5)"
+                this.color = "magenta"
+                this.lightColor= "rgb(242, 230, 255)"
+                this.ghostColor = "rgba(242, 230, 255, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
                 break
             case 'Z':
-                this.color = "rgb(255, 51, 51)"
-                this.ghostColor = "rgba(204, 0, 0, 0.5)"
+                this.color = "red"
+                this.lightColor = "rgb(255, 230, 230)"
+                this.ghostColor = "rgba(255, 230, 230, 0.5)"
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
                 break
         }
     }
         
-    get absMinoesPos() {
+    get minoesAbsPos() {
         return this.minoesPos.translate(this.pos)
     }
 
-    draw(context, ghostYOffset=0) {
-        if (ghostYOffset) {
+    draw(context, ghost_pos=[0, 0]) {
+        const color = this.locked ? this.lightColor : this.color
+        if (ghost_pos[1]) {
             context.save()
             context.shadowColor = this.ghostColor
             context.shadowOffsetX = 0
-            context.shadowOffsetY  = ghostYOffset * MINO_SIZE
+            context.shadowOffsetY = (ghost_pos[1]-this.pos[1]) * MINO_SIZE
             context.shadowBlur = 3
-        }
-        this.absMinoesPos.map(pos => draw_mino(context, ...pos, this.color))
-        if (ghostYOffset)
+            this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
             context.restore()
+        }
+        this.minoesAbsPos.forEach(pos => drawMino(context, pos, this.lightColor, color, ghost_pos))
     }
 }
 
 
-function draw_mino(context, x, y, color, ghostYOffset) {
-    context.fillStyle = color
-    context.fillRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE)
+function drawMino(context, pos, color1, color2=null, spotlight=[0, 0]) {
+    if (color2) {
+        var center = pos.add([0.5, 0.5])
+        spotlight = spotlight.add([0.5, 0.5])
+        var glint = spotlight.mul(0.1).add(center.mul(0.9)).mul(MINO_SIZE)
+        const gradient = context.createRadialGradient(
+            ...glint, 2, ...glint.add([6, 4]), 2*MINO_SIZE
+        )
+        gradient.addColorStop(0, color1)
+        gradient.addColorStop(1, color2)
+        context.fillStyle = gradient
+    }
+    else
+        context.fillStyle = color1
+    var topLeft = pos.mul(MINO_SIZE)
+    context.fillRect(...topLeft, MINO_SIZE, MINO_SIZE)
     context.lineWidth = 0.5
     context.strokeStyle = "white"
-    context.strokeRect(x*MINO_SIZE, y*MINO_SIZE, MINO_SIZE, MINO_SIZE)
+    context.strokeRect(...topLeft, MINO_SIZE, MINO_SIZE)
 }
 
 
@@ -216,16 +246,17 @@ class HoldQueue {
     }
 }
 
+
 timeFormat = new Intl.DateTimeFormat("en-US", {
     hour: "numeric", minute: "2-digit", second: "2-digit", hourCycle: "h24", timeZone: "UTC"
 }).format
 
+
 class Stats {
-    constructor (div, start_level=1) {
+    constructor (div) {
         this.div = div
         this._score = 0
         this.highScore = 0
-        this.level = start_level - 1
         this.goal = 0
         this.linesCleared = 0
         this.startTime = Date.now()
@@ -244,8 +275,11 @@ class Stats {
             this.highScore = score
     }
 
-    new_level() {
-        this.level++
+    newLevel(level=null) {
+        if (level)
+            this.level = level
+        else
+            this.level++
         this.goal += 5 * this.level
         if (this.level <= 20)
             this.fallDelay = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
@@ -253,13 +287,41 @@ class Stats {
             this.lockDelay = 500 * Math.pow(0.9, this.level - 15)
     }
 
+    locksDown(tSpin, linesCleared) {
+        var pattern_name = []
+        var pattern_score = 0
+        var combo_score = 0
+        
+        if (tSpin)
+            pattern_name.push(tSpin)
+        if (linesCleared) {
+            pattern_name.push(SCORES[linesCleared].linesClearedName)
+            this.combo++
+        }
+        else
+            this.combo = -1
+
+        if (linesCleared || tSpin) {
+            pattern_score = SCORES[linesCleared][tSpin]
+            this.goal -= pattern_score
+            pattern_score *= 100 * this.level
+            pattern_name = pattern_name.join("\n")
+        }
+        if (this.combo >= 1)
+            combo_score = (linesCleared == 1 ? 20 : 50) * this.combo * this.level
+
+        this.score += pattern_score + combo_score
+
+        //console.log(pattern_name, pattern_score, this.combo, combo_score)
+    }
+
     print() {
-        this.div.innerHTML  = this.score
-        this.div.innerHTML  += "<br/>" + this.highScore
-        this.div.innerHTML  += "<br/>" + this.level
-        this.div.innerHTML  += "<br/>" + this.goal
-        this.div.innerHTML  += "<br/>" + this.linesCleared
-        this.div.innerHTML  += "<br/>" + timeFormat(Date.now() - this.startTime)
+        this.div.innerHTML  = this.score + "<br/>"
+                            + this.highScore + "<br/>"
+                            + this.level + "<br/>"
+                            + this.goal + "<br/>"
+                            + this.linesCleared + "<br/>"
+                            + timeFormat(Date.now() - this.startTime)
     }
 }
 
@@ -267,26 +329,23 @@ class Stats {
 class Matrix {
     constructor(context) {
         this.context = context
-        this.cells = Array.from(Array(MATRIX_COLUMNS), x => Array(MATRIX_ROWS))
+        this.cells = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.width = MATRIX_COLUMNS*MINO_SIZE
         this.height = MATRIX_ROWS*MINO_SIZE
         this.piece = null
     }
     
     cellIsOccupied(x, y) {
-        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_ROWS ? this.cells[x][y] : true
+        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_ROWS ? this.cells[y+3][x] : true
     }
     
-    spaceToMove(absMinoesPos) {
-        for (const pos of absMinoesPos) {
-            if (this.cellIsOccupied(...pos))
-                return false
-        }
-        return true
+    spaceToMove(minoesAbsPos) {
+        return !minoesAbsPos.some(pos => this.cellIsOccupied(...pos))
     }
     
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
+
         // grid
         this.context.strokeStyle = "rgba(128, 128, 128, 128)"
         this.context.lineWidth = 0.5
@@ -300,10 +359,19 @@ class Matrix {
             this.context.lineTo(this.width, y);
         }
         this.context.stroke()
+
+        // ghost position
+        for (var ghost_pos = Array.from(this.piece.pos); this.spaceToMove(this.piece.minoesPos.translate(ghost_pos)); ghost_pos[1]++) {}
+        ghost_pos[1]--
+
+        // locked minoes
+        this.cells.slice(3).forEach((row, y) => row.forEach((colors, x) => {
+            if (colors) drawMino(this.context, [x, y], ...colors, ghost_pos)
+        }))
+        
         // falling piece
         if (this.piece)
-            for (var ghostYOffset = 0; this.spaceToMove(this.piece.minoesPos.translate([this.piece.pos[0], this.piece.pos[1]+ghostYOffset])); ghostYOffset++) {}
-            this.piece.draw(this.context, --ghostYOffset)
+            this.piece.draw(this.context, ghost_pos)
     }
 }
 
@@ -318,15 +386,55 @@ class NextQueue {
 
     draw() {
         this.context.clearRect(0, 0, this.width, this.height)
-        this.pieces.map(piece => piece.draw(this.context))
+        this.pieces.forEach(piece => piece.draw(this.context))
     }
 }
 
 
-function move(movement) {
-    const test_pos = matrix.piece.pos.add(movement)
-    if (matrix.spaceToMove(matrix.piece.minoesPos.translate(test_pos))) {
-        matrix.piece.pos = test_pos
+function newLevel(startLevel) {
+    stats.newLevel(startLevel)
+    generationPhase()
+}
+
+function generationPhase(held_piece=null) {
+    if (!held_piece) {
+        matrix.piece = nextQueue.pieces.shift()
+        nextQueue.pieces.push(new Tetromino())
+        nextQueue.pieces.forEach((piece, i) => piece.pos = NEXT_PIECES_POSITIONS[i])
+    }
+    matrix.piece.pos = FALLING_PIECE_POSITION
+    if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos)))
+        fallingPhase()
+    else
+        gameOver()
+}
+
+function fallingPhase() {
+    scheduler.clearTimeout(lockPhase)
+    scheduler.clearTimeout(locksDown)
+    matrix.piece.locked = false
+    scheduler.setTimeout(lockPhase, stats.fallDelay)
+}
+
+function lockPhase() {
+    if (!move(MOVEMENT.DOWN))
+        locksDown()
+}
+
+function move(movement, lock=true, testMinoesPos=matrix.piece.minoesPos) {
+    const testPos = matrix.piece.pos.add(movement)
+    if (matrix.spaceToMove(testMinoesPos.translate(testPos))) {
+        matrix.piece.pos = testPos
+        matrix.piece.minoesPos = testMinoesPos
+        if (movement != MOVEMENT.DOWN)
+            matrix.piece.rotatedLast = false
+        if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos.add(MOVEMENT.DOWN))))
+            fallingPhase()
+        else if (lock) {
+            matrix.piece.locked = true
+            scheduler.clearTimeout(locksDown)
+            scheduler.setTimeout(locksDown, stats.lockDelay)
+        }
         return true
     }
     else {
@@ -336,77 +444,65 @@ function move(movement) {
 
 function rotate(spin) {
     const test_minoes_pos = matrix.piece.minoesPos.map(pos => pos.rotate(spin))
-    rotation_point = 0
-    for (const movement of matrix.piece.srs[spin==SPIN.CW?"CW":"CCW"][matrix.piece.orientation]) {
-        const test_pos = matrix.piece.pos.add(movement)
-        if (matrix.spaceToMove(test_minoes_pos.translate(test_pos))) {
-            matrix.piece.pos = test_pos
-            matrix.piece.minoesPos = test_minoes_pos
+    rotationPoint = 1
+    for (const movement of matrix.piece.srs[spin][matrix.piece.orientation]) {
+        if (move(movement, false, test_minoes_pos)) {
             matrix.piece.orientation = (matrix.piece.orientation + spin + 4) % 4
-            break;
+            matrix.piece.rotatedLast = true
+            if (rotationPoint == 5)
+                matrix.piece.rotationPoint5Used = true
+            return true
         }
-        rotation_point++
+        rotationPoint++
+    }
+    return false
+}
+
+function locksDown(){
+    scheduler.clearInterval(move)
+    if (matrix.piece.minoesAbsPos.every(pos => pos.y < 0))
+        game_over()
+    else {
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.cells[pos[1]+3][pos[0]] = [matrix.piece.lightColor, matrix.piece.color])
+
+        // T-Spin detection
+        var tSpin = T_SPIN.NONE
+        const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(pos))
+        if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
+            const a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
+                  b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
+                  c = tSlots[(matrix.piece.orientation+T_SLOT.C)%4],
+                  d = tSlots[(matrix.piece.orientation+T_SLOT.D)%4]
+            if (a && b && (c || d))
+                tSpin = T_SPIN.T_SPIN
+            else if (c && d && (a || b))
+                tSpin = matrix.piece.rotationPoint5Used ? T_SPIN.T_SPIN : T_SPIN.MINI
+        }
+
+        // Complete lines
+        var linesCleared = 0
+        matrix.cells.forEach((row, y) => {
+            if (row.filter(mino => mino.length).length == MATRIX_COLUMNS) {
+                matrix.cells.splice(y, 1)
+                matrix.cells.unshift(Array(MATRIX_COLUMNS))
+                linesCleared++
+            }
+        })
+
+        stats.locksDown(tSpin, linesCleared)
+
+        if (stats.goal <= 0)
+            newLevel()
+        else
+            generationPhase()
     }
 }
 
-function fall() {
-    move(MOVEMENT.DOWN);
-}
-
-function moveLeft() {
-    move(MOVEMENT.LEFT);
-}
-
-function moveRight() {
-    move(MOVEMENT.RIGHT)
-}
-
-function softDrop() {
-    move(MOVEMENT.DOWN)
-}
-
-function hardDrop() {
-    while(move(MOVEMENT.DOWN)) {
-
-    }
-}
-
-function rotateCW() {
-    rotate(SPIN.CW)
-}
-
-function rotateCCW() {
-    rotate(SPIN.CCW)
-}
-
-function hold() {
-    if (this.matrix.piece.holdEnabled) {
-        this.matrix.piece.holdEnabled = false
-        clearInterval(lockPhaseIntervalID)
-        var shape = this.matrix.piece.shape
-        this.matrix.piece = this.holdQueue.piece
-        this.holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
-        this.generationPhase(this.matrix.piece)
-    }
-}
-
-function new_level() {
-    stats.new_level()
-    fallIntervalID = setInterval(fall, stats.fallDelay)
-    generationPhase()
-}
-
-function generationPhase(held_piece=null) {
-    if (!held_piece) {
-        this.matrix.piece = this.nextQueue.pieces.shift()
-        this.nextQueue.pieces.push(new Tetromino())
-        this.nextQueue.pieces.map((piece, i, pieces) => piece.pos = NEXT_PIECES_POSITIONS[i])
-    }
-    this.matrix.piece.pos = FALLING_PIECE_POSITION
-    /*if (this.matrix.spaceToMove(this.matrix.piece.minoesPos.translate(this.matrix.piece.pos)))
-        fallingPhase()
-    else
-        gameOver()*/
+function gameOver() {
+    state = STATE.GAME_OVER
+    scheduler.clearTimeout(lockPhase)
+    scheduler.clearTimeout(locksDown)
+    console.log("GAME OVER")
 }
 
 function autorepeat() {
@@ -456,12 +552,56 @@ function keyUpHandler(e) {
     }
 }
 
+function moveLeft() {
+    move(MOVEMENT.LEFT);
+}
+
+function moveRight() {
+    move(MOVEMENT.RIGHT)
+}
+
+function softDrop() {
+    if (move(MOVEMENT.DOWN))
+        stats.score++
+}
+
+function hardDrop() {
+    scheduler.clearTimeout(lockPhase)
+    scheduler.clearTimeout(locksDown)
+    while(move(MOVEMENT.DOWN, false)) {
+        stats.score += 2
+    }
+    locksDown()
+}
+
+function rotateCW() {
+    rotate(SPIN.CW)
+}
+
+function rotateCCW() {
+    rotate(SPIN.CCW)
+}
+
+function hold() {
+    if (this.matrix.piece.holdEnabled) {
+        this.matrix.piece.holdEnabled = false
+        scheduler.clearInterval(move)
+        scheduler.clearInterval(locksDown)
+        var shape = this.matrix.piece.shape
+        this.matrix.piece = this.holdQueue.piece
+        this.holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
+        this.generationPhase(this.matrix.piece)
+    }
+}
+
 function draw() {
     holdQueue.draw()
     stats.print()
     matrix.draw()
     nextQueue.draw()
-    requestAnimationFrame(draw)
+
+    if (state != STATE.GAME_OVER)
+        requestAnimationFrame(draw)
 }
 
 window.onload = function() {
@@ -486,5 +626,6 @@ window.onload = function() {
     addEventListener("keyup", keyUpHandler, false)
     requestAnimationFrame(draw)
 
-    this.new_level()
+    state = STATE.PLAYING
+    this.newLevel(1)
 }
