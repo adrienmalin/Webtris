@@ -54,7 +54,7 @@ canvas {
     display: flex;
     flex-direction: row;
     margin: 10% 0;
-    font-size: 3vw;
+    font-size: 2.5vw;
 }
 
 .stats-names {

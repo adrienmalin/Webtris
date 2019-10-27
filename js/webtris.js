@@ -19,22 +19,23 @@ Array.prototype.pick = function() {
 }
 
 
-const MINO_SIZE = 20
-const NEXT_PIECES = 5
-const HOLD_ROWS = 6
-const HOLD_COLUMNS = 6
-const MATRIX_ROWS = 20
+const MINO_SIZE =      20
+const NEXT_PIECES =     5
+const HOLD_ROWS =       6
+const HOLD_COLUMNS =    6
+const MATRIX_ROWS =    20
 const MATRIX_COLUMNS = 10
-const NEXT_ROWS = 20
-const NEXT_COLUMNS = 6
-const HELD_PIECE_POSITION = [2, 2]
+const NEXT_ROWS =      20
+const NEXT_COLUMNS =    6
+const HELD_PIECE_POSITION =    [2, 2]
 const FALLING_PIECE_POSITION = [4, 0]
 const NEXT_PIECES_POSITIONS = Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+2])
-const LOCK_DELAY = 500
-const FALL_DELAY = 1000
-const AUTOREPEAT_DELAY = 250
-const AUTOREPEAT_PERIOD = 10
-const TEMP_TEXTS_DELAY = 700
+const LOCK_DELAY =         500
+const FALL_DELAY =        1000
+const AUTOREPEAT_DELAY =   250
+const AUTOREPEAT_PERIOD =   10
+const ANIMATION_DELAY =     67
+const TEMP_TEXTS_DELAY =   700
 const MOVEMENT = {
     LEFT:  [-1, 0],
     RIGHT: [ 1, 0],
@@ -335,16 +336,11 @@ class Stats {
         if (pattern_score)
             printTempTexts([pattern_name, pattern_score])
         if (combo_score)
-            printTempTexts(["COMBO x" + this.combo, combo_score])
+            printTempTexts([`COMBO x${this.combo}`, combo_score])
     }
 
     print() {
-        this.div.innerHTML  = this.score + "<br/>"
-                            + this.highScore + "<br/>"
-                            + this.level + "<br/>"
-                            + this.goal + "<br/>"
-                            + this.linesCleared + "<br/>"
-                            + timeFormat(Date.now() - this.startTime)
+        this.div.innerHTML  = `${this.score}<br/>${this.highScore}<br/>${this.level}<br/>${this.goal}<br/>${this.linesCleared}<br/>${timeFormat(Date.now() - this.startTime)}`
     }
 }
 
@@ -361,6 +357,8 @@ class Matrix {
         this.centerX = this.width / 2
         this.centerY = this.height / 2
         this.piece = null
+        this.trail_length = 0
+        this.trailStartPos = []
     }
     
     cellIsOccupied(x, y) {
@@ -397,6 +395,18 @@ class Matrix {
             this.cells.slice(3).forEach((row, y) => row.forEach((colors, x) => {
                 if (colors) drawMino(this.context, [x, y], ...colors, ghost_pos)
             }))
+
+            // trail
+            if (this.trail_length) {
+                var height = this.trail_length * MINO_SIZE
+                var gradient = this.context.createLinearGradient(0, 0, 0, height)
+                gradient.addColorStop(0,"rgba(255, 255, 255, 0)")
+                gradient.addColorStop(1, this.piece.ghostColor  )
+                this.context.fillStyle = gradient
+                this.trailStartPos.forEach(topLeft => {
+                    this.context.fillRect(...topLeft, MINO_SIZE, height)
+                })
+            }
             
             // falling piece
             if (this.piece)
@@ -478,12 +488,15 @@ function fallingPhase() {
 }
 
 function lockPhase() {
-    if (!move(MOVEMENT.DOWN))
-        locksDown()
+    if (!move(MOVEMENT.DOWN)) {
+        matrix.piece.locked = true
+        if (!scheduler.timeoutTasks.has(locksDown))
+            scheduler.setTimeout(locksDown, stats.lockDelay)
+    }
     requestAnimationFrame(draw)
 }
 
-function move(movement, lock=true, testMinoesPos=matrix.piece.minoesPos) {
+function move(movement, testMinoesPos=matrix.piece.minoesPos) {
     const testPos = matrix.piece.pos.add(movement)
     if (matrix.spaceToMove(testMinoesPos.translate(testPos))) {
         matrix.piece.pos = testPos
@@ -493,11 +506,9 @@ function move(movement, lock=true, testMinoesPos=matrix.piece.minoesPos) {
         if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos.add(MOVEMENT.DOWN))))
             fallingPhase()
         else {
+            matrix.piece.locked = true
             scheduler.clearTimeout(locksDown)
-            if (lock) {
-                matrix.piece.locked = true
-                scheduler.setTimeout(locksDown, stats.lockDelay)
-            }
+            scheduler.setTimeout(locksDown, stats.lockDelay)
         }
         return true
     }
@@ -510,7 +521,7 @@ function rotate(spin) {
     const test_minoes_pos = matrix.piece.minoesPos.map(pos => pos.rotate(spin))
     rotationPoint = 1
     for (const movement of matrix.piece.srs[spin][matrix.piece.orientation]) {
-        if (move(movement, false, test_minoes_pos)) {
+        if (move(movement, test_minoes_pos)) {
             matrix.piece.orientation = (matrix.piece.orientation + spin + 4) % 4
             matrix.piece.rotatedLast = true
             if (rotationPoint == 5)
@@ -544,16 +555,16 @@ function locksDown(){
         }
 
         // Complete lines
-        var linesCleared = 0
+        var linesCleared = []
         matrix.cells.forEach((row, y) => {
             if (row.filter(mino => mino.length).length == MATRIX_COLUMNS) {
                 matrix.cells.splice(y, 1)
                 matrix.cells.unshift(Array(MATRIX_COLUMNS))
-                linesCleared++
+                linesCleared.push(y * MINO_SIZE)
             }
         })
 
-        stats.locksDown(tSpin, linesCleared)
+        stats.locksDown(tSpin, linesCleared.length)
 
         if (stats.goal <= 0)
             newLevel()
@@ -635,10 +646,17 @@ function softDrop() {
 function hardDrop() {
     scheduler.clearTimeout(lockPhase)
     scheduler.clearTimeout(locksDown)
-    while(move(MOVEMENT.DOWN, false)) {
+    matrix.trailStartPos = Array.from(matrix.piece.minoesAbsPos).map(pos => pos.mul(MINO_SIZE))
+    for (this.matrix.trail_length=0; move(MOVEMENT.DOWN); this.matrix.trail_length++) {
         stats.score += 2
     }
     locksDown()
+    scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
+}
+
+function clearTrail() {
+    matrix.trail_length = 0
+    requestAnimationFrame(draw)
 }
 
 function rotateCW() {
