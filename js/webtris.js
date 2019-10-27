@@ -34,7 +34,7 @@ const LOCK_DELAY =         500
 const FALL_DELAY =        1000
 const AUTOREPEAT_DELAY =   250
 const AUTOREPEAT_PERIOD =   10
-const ANIMATION_DELAY =     67
+const ANIMATION_DELAY =     100
 const TEMP_TEXTS_DELAY =   700
 const MOVEMENT = {
     LEFT:  [-1, 0],
@@ -357,8 +357,12 @@ class Matrix {
         this.centerX = this.width / 2
         this.centerY = this.height / 2
         this.piece = null
-        this.trail_length = 0
-        this.trailStartPos = []
+        this.trail = {
+            minoesPos: [],
+            height: 0,
+            gradient: null
+        }
+        this.linesCleared = []
     }
     
     cellIsOccupied(x, y) {
@@ -397,20 +401,28 @@ class Matrix {
             }))
 
             // trail
-            if (this.trail_length) {
-                var height = this.trail_length * MINO_SIZE
-                var gradient = this.context.createLinearGradient(0, 0, 0, height)
-                gradient.addColorStop(0,"rgba(255, 255, 255, 0)")
-                gradient.addColorStop(1, this.piece.ghostColor  )
-                this.context.fillStyle = gradient
-                this.trailStartPos.forEach(topLeft => {
-                    this.context.fillRect(...topLeft, MINO_SIZE, height)
+            if (this.trail.height) {
+                this.context.fillStyle = this.trail.gradient
+                this.trail.minoesPos.forEach(topLeft => {
+                    this.context.fillRect(...topLeft, MINO_SIZE, this.trail.height)
                 })
             }
             
             // falling piece
             if (this.piece)
                 this.piece.draw(this.context, ghost_pos)
+
+            // Lines cleared
+            if (this.linesCleared.length) {
+                this.context.save()
+                this.context.shadowColor = "white"
+                this.context.shadowOffsetX = 0
+                this.context.shadowOffsetY = 0
+                this.context.shadowBlur = 5
+                this.context.fillStyle = "white"
+                this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))
+                this.context.restore()
+            }
         }
 
         // text
@@ -555,22 +567,27 @@ function locksDown(){
         }
 
         // Complete lines
-        var linesCleared = []
+        matrix.linesCleared = []
         matrix.cells.forEach((row, y) => {
             if (row.filter(mino => mino.length).length == MATRIX_COLUMNS) {
                 matrix.cells.splice(y, 1)
                 matrix.cells.unshift(Array(MATRIX_COLUMNS))
-                linesCleared.push(y * MINO_SIZE)
+                matrix.linesCleared.push((y-3) * MINO_SIZE)
             }
         })
+        scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
-        stats.locksDown(tSpin, linesCleared.length)
+        stats.locksDown(tSpin, matrix.linesCleared.length)
 
         if (stats.goal <= 0)
             newLevel()
         else
             generationPhase()
     }
+}
+
+function clearLinesCleared() {
+    matrix.linesCleared = []
 }
 
 function gameOver() {
@@ -647,16 +664,19 @@ function softDrop() {
 function hardDrop() {
     scheduler.clearTimeout(lockPhase)
     scheduler.clearTimeout(locksDown)
-    matrix.trailStartPos = Array.from(matrix.piece.minoesAbsPos).map(pos => pos.mul(MINO_SIZE))
-    for (this.matrix.trail_length=0; move(MOVEMENT.DOWN); this.matrix.trail_length++) {
+    matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos).map(pos => pos.mul(MINO_SIZE))
+    for (matrix.trail.height=0; move(MOVEMENT.DOWN); matrix.trail.height += MINO_SIZE) {
         stats.score += 2
     }
     locksDown()
+    matrix.trail.gradient = matrix.context.createLinearGradient(0, 0, 0, matrix.trail.height)
+    matrix.trail.gradient.addColorStop(0,"rgba(255, 255, 255, 0)")
+    matrix.trail.gradient.addColorStop(1, matrix.piece.ghostColor)
     scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
 }
 
 function clearTrail() {
-    matrix.trail_length = 0
+    matrix.trail.height = 0
     requestAnimationFrame(draw)
 }
 
