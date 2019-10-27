@@ -249,8 +249,8 @@ function drawMino(context, pos, color1, color2=null, spotlight=[0, 0]) {
 
 
 class HoldQueue {
-    constructor(context) {
-        this.context = context
+    constructor() {
+        this.context = document.getElementById("hold").getContext("2d")
         this.piece = null
         this.width = HOLD_COLUMNS*MINO_SIZE
         this.height = HOLD_ROWS*MINO_SIZE
@@ -266,16 +266,17 @@ class HoldQueue {
 }
 
 
-timeFormat = new Intl.DateTimeFormat("en-US", {
-    hour: "numeric", minute: "2-digit", second: "2-digit", hourCycle: "h24", timeZone: "UTC"
+timeFormat = new Intl.DateTimeFormat("fr-FR", {
+    minute: "2-digit", second: "2-digit", hourCycle: "h24", timeZone: "UTC"
 }).format
 
 
 class Stats {
-    constructor (div) {
-        this.div = div
+    constructor () {
+        this.div = document.getElementById("stats-values")
         this._score = 0
-        this.highScore = 0
+        this.lastHighScore = localStorage.getItem('highScore') || 0
+        this.highScore = this.lastHighScore
         this.goal = 0
         this.linesCleared = 0
         this.startTime = Date.now()
@@ -340,14 +341,19 @@ class Stats {
     }
 
     print() {
-        this.div.innerHTML  = `${this.score}<br/>${this.highScore}<br/>${this.level}<br/>${this.goal}<br/>${this.linesCleared}<br/>${timeFormat(Date.now() - this.startTime)}`
+        this.div.innerHTML  = `${this.score}<br/>
+        ${this.highScore}<br/>
+        ${timeFormat(Date.now() - this.startTime)}<br/>
+        ${this.level}<br/>
+        ${this.goal}<br/>
+        ${this.linesCleared}`
     }
 }
 
 
 class Matrix {
-    constructor(context) {
-        this.context = context
+    constructor() {
+        this.context = document.getElementById("matrix").getContext("2d")
         this.context.textAlign = "center"
         this.context.textBaseline = "center"
         this.context.font = "3vw 'Share Tech', sans-serif"
@@ -458,8 +464,8 @@ class Matrix {
 
 
 class NextQueue {
-    constructor(context) {
-        this.context = context
+    constructor() {
+        this.context = document.getElementById("next").getContext("2d") 
         this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
         this.width = NEXT_COLUMNS*MINO_SIZE
         this.height = NEXT_ROWS*MINO_SIZE
@@ -598,6 +604,11 @@ function gameOver() {
     scheduler.clearTimeout(locksDown)
     scheduler.clearInterval(clock)
     requestAnimationFrame(draw)
+
+    if (stats.score > stats.lastHighScore) {
+        alert("Bravo ! Vous avez battu votre meilleur score.")
+        localStorage.setItem('highScore', stats.highScore)
+    }
 }
 
 function autorepeat() {
@@ -692,12 +703,12 @@ function rotateCCW() {
 
 function hold() {
     if (this.matrix.piece.holdEnabled) {
-        this.matrix.piece.holdEnabled = false
         scheduler.clearInterval(move)
         scheduler.clearInterval(locksDown)
         var shape = this.matrix.piece.shape
         this.matrix.piece = this.holdQueue.piece
         this.holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
+        this.holdQueue.piece.holdEnabled = false
         this.generationPhase(this.matrix.piece)
     }
 }
@@ -748,10 +759,10 @@ function draw() {
 window.onload = function() {
     tempTexts = []
 
-    holdQueue = new HoldQueue(document.getElementById("hold").getContext("2d"))
-    stats = new Stats(document.getElementById("stats-values"))
-    matrix = new Matrix(document.getElementById("matrix").getContext("2d"))
-    nextQueue = new NextQueue(document.getElementById("next").getContext("2d"))
+    holdQueue = new HoldQueue()
+    stats = new Stats()
+    matrix = new Matrix()
+    nextQueue = new NextQueue()
     
     pressedKeys = new Set()
     actionsToRepeat = []

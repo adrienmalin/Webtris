@@ -57,6 +57,8 @@ canvas {
 
 .hold {
     width: 120px;
+    flex-grow: 0;
+    justify-content: right;
 }
 
 .stats {
@@ -64,7 +66,6 @@ canvas {
     flex-direction: row;
     margin: 10% 0;
     font-size: 1.2em;
-    width: 120px;
 }
 
 .stats-names {
@@ -75,6 +76,7 @@ canvas {
 .stats-values {
     text-align: right;
     font-family: 'Share Tech Mono';
+    min-width: 90px;
 }
 
 .matrix {
