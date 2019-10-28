@@ -3,44 +3,34 @@
 <head>
     <meta charset="utf-8" />
     <title>Webtris</title>
-    <link rel="stylesheet" type="text/css" href="css/webtris.css" />
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
     <!--[if lt IE 9]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
     <script type="text/javascript" src="js/webtris.js"></script>
 </head>
 <body>
     <h1>WEBTRIS</h1>
-    <div class="flex-columns">
-        <div class="flex-rows">
-            <canvas id="hold" width="120" height="120"></canvas>
-            <div class="flex-columns">
-                <div class="flex-space"></div>
-            </div>
-            <div id="stats">
-                <div id="stats-names">
-                    SCORE<br/>
-                    RECORD<br/>
-                    TEMPS<br/>
-                	<br />
-                    NIVEAU<br/>
-                    OBJECTIF<br/>
-                    LIGNES
-                </div>
-                <div id="stats-values">
-                    0<br/>
-                    0<br/>
-                    00:00<br/>
-                    <br/>
-                    0<br/>
-                    0<br/>
-                    0
-                </div>
-            </div>
-
+    <div id="grid">
+        <canvas id="hold" width="120" height="120"></canvas>
+        <div id="stats-names">
+            SCORE<br/>
+            RECORD<br/>
+            TEMPS<br/>
+            <br />
+            NIVEAU<br/>
+            OBJECTIF<br/>
+            LIGNES
+        </div>
+        <div id="stats-values">
+            0<br/>
+            0<br/>
+            00:00<br/>
+            <br/>
+            0<br/>
+            0<br/>
+            0
         </div>
         <canvas id="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
-        <div class="flex-rows">
-            <canvas id="next"width="120" height="400"></canvas>
-        </div>
+        <canvas id="next"width="120" height="400"></canvas>
     </div>
 </body>
 </html>
