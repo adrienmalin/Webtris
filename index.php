@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <title>Webtris</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <script type="text/javascript" src="js/index.js"></script>
 </head>
