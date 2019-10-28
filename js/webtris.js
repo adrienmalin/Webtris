@@ -144,7 +144,7 @@ class Tetromino {
         }
         switch(this.shape) {
             case 'I':
-                this.color = "cyan"
+                this.color = "rgb(153, 179, 255)"
                 this.lightColor = "rgb(234, 250, 250)"
                 this.ghostColor = "rgba(234, 250, 250, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [2, 0]]
@@ -162,19 +162,19 @@ class Tetromino {
                 ]
             break
             case 'J':
-                this.color = "blue"
+                this.color = "rgb(153, 255, 255)"
                 this.lightColor = "rgb(230, 240, 255)"
                 this.ghostColor = "rgba(230, 240, 255, 0.5)"
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
             break
             case 'L':
-                this.color = "orange"
+                this.color = "rgb(255, 204, 153)"
                 this.lightColor = "rgb(255, 224, 204)"
                 this.ghostColor = "rgba(255, 224, 204, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
             break
             case 'O':
-                this.color = "yellow"
+                this.color = "	rgb(255, 255, 153)"
                 this.lightColor = "rgb(255, 255, 230)"
                 this.ghostColor = "rgba(255, 255, 230, 0.5)"
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
@@ -182,19 +182,19 @@ class Tetromino {
                 this.srs[SPIN.CCW] = [[]]
             break
             case 'S':
-                this.color = "green"
+                this.color = "rgb(153, 255, 153)"
                 this.lightColor = "rgb(236, 255, 230)"
                 this.ghostColor = "rgba(236, 255, 230, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
             break
             case 'T':
-                this.color = "magenta"
+                this.color = "rgb(204, 153, 255)"
                 this.lightColor= "rgb(242, 230, 255)"
                 this.ghostColor = "rgba(242, 230, 255, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
             break
             case 'Z':
-                this.color = "red"
+                this.color = "rgb(255, 153, 153)"
                 this.lightColor = "rgb(255, 230, 230)"
                 this.ghostColor = "rgba(255, 230, 230, 0.5)"
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
@@ -206,36 +206,15 @@ class Tetromino {
         return this.minoesPos.translate(this.pos)
     }
 
-    draw(context, ghost_pos=[0, 0]) {
+    draw(context) {
         const color = this.locked ? this.lightColor : this.color
-        if (ghost_pos[1]) {
-            context.save()
-            context.shadowColor = this.ghostColor
-            context.shadowOffsetX = 0
-            context.shadowOffsetY = (ghost_pos[1]-this.pos[1]) * MINO_SIZE
-            context.shadowBlur = 3
-            this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
-            context.restore()
-        }
-        this.minoesAbsPos.forEach(pos => drawMino(context, pos, this.lightColor, color, ghost_pos))
+        this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
     }
 }
 
-
-function drawMino(context, pos, color1, color2=null, spotlight=[0, 0]) {
-    if (color2) {
-        var center = pos.add([0.5, 0.5])
-        spotlight = spotlight.add([0.5, 0.5])
-        var glint = spotlight.mul(0.1).add(center.mul(0.9)).mul(MINO_SIZE)
-        const gradient = context.createRadialGradient(
-            ...glint, 2, ...glint.add([6, 4]), 2*MINO_SIZE
-        )
-        gradient.addColorStop(0, color1)
-        gradient.addColorStop(1, color2)
-        context.fillStyle = gradient
-    } else
-        context.fillStyle = color1
+function drawMino(context, pos, color) {
     var topLeft = pos.mul(MINO_SIZE)
+    context.fillStyle = color
     context.fillRect(...topLeft, MINO_SIZE, MINO_SIZE)
     context.lineWidth = 0.5
     context.strokeStyle = "white"
@@ -397,8 +376,8 @@ class Matrix {
             ghost_pos[1]--
 
             // locked minoes
-            this.cells.slice(3).forEach((row, y) => row.forEach((colors, x) => {
-                if (colors) drawMino(this.context, [x, y], ...colors, ghost_pos)
+            this.cells.slice(3).forEach((row, y) => row.forEach((color, x) => {
+                if (color) drawMino(this.context, [x, y], color, ghost_pos)
             }))
 
             // trail
@@ -411,19 +390,11 @@ class Matrix {
             
             // falling piece
             if (this.piece)
-                this.piece.draw(this.context, ghost_pos)
+                this.piece.draw(this.context)
 
             // Lines cleared
-            if (this.linesCleared.length) {
-                this.context.save()
-                this.context.shadowColor = "white"
-                this.context.shadowOffsetX = 0
-                this.context.shadowOffsetY = 0
-                this.context.shadowBlur = 5
-                this.context.fillStyle = "white"
-                this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))
-                this.context.restore()
-            }
+            this.context.fillStyle = "white"
+            this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))
         }
 
         // text
@@ -550,7 +521,7 @@ function locksDown(){
     if (matrix.piece.minoesAbsPos.every(pos => pos.y < 0))
         game_over()
     else {
-        matrix.piece.minoesAbsPos.forEach(pos => matrix.cells[pos[1]+3][pos[0]] = [matrix.piece.lightColor, matrix.piece.color])
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.cells[pos[1]+3][pos[0]] = matrix.piece.color)
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
@@ -620,6 +591,8 @@ function autorepeat() {
 }
 
 function keyDownHandler(e) {
+    if (e.key in actions[state])
+        e.preventDefault()
     if (!pressedKeys.has(e.key)) {
         pressedKeys.add(e.key)
         if (e.key in actions[state]) {

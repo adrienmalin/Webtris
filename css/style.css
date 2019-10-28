@@ -51,12 +51,12 @@ a {
 }
 
 #play {
-    color: lightcyan;
+    color: LightCyan;
     text-align: center;
     font-weight: bold;
     text-shadow: 2px 1px rgb(153, 145, 175);
     font-size: 1.5em;
-	margin 40px;
+	margin: 30px;
 }
 
 #grid {
