@@ -206,8 +206,17 @@ class Tetromino {
         return this.minoesPos.translate(this.pos)
     }
 
-    draw(context) {
+    draw(context, ghostYOffset=0) {
         const color = this.locked ? this.lightColor : this.color
+        if (ghostYOffset) {
+            context.save()
+            context.shadowColor = this.ghostColor
+            context.shadowOffsetX = 0
+            context.shadowOffsetY = ghostYOffset * MINO_SIZE
+            context.shadowBlur = 3
+            this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
+            context.restore()
+        }
         this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
     }
 }
@@ -371,13 +380,9 @@ class Matrix {
         this.context.stroke()
 
         if (state != STATE.PAUSED) {
-            // ghost position
-            for (var ghost_pos = Array.from(this.piece.pos); this.spaceToMove(this.piece.minoesPos.translate(ghost_pos)); ghost_pos[1]++) {}
-            ghost_pos[1]--
-
             // locked minoes
             this.cells.slice(3).forEach((row, y) => row.forEach((color, x) => {
-                if (color) drawMino(this.context, [x, y], color, ghost_pos)
+                if (color) drawMino(this.context, [x, y], color)
             }))
 
             // trail
@@ -389,8 +394,10 @@ class Matrix {
             }
             
             // falling piece
+            for (var ghostYOffset = 1; this.spaceToMove(this.piece.minoesAbsPos.translate([0, ghostYOffset])); ghostYOffset++) {}
+               ghostYOffset--
             if (this.piece)
-                this.piece.draw(this.context)
+                this.piece.draw(this.context, ghostYOffset)
 
             // Lines cleared
             this.context.fillStyle = "white"
