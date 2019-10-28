@@ -160,19 +160,19 @@ class Tetromino {
                     [[ 0, -1], [ 1, -1], [-2, -1], [ 1,  1], [-2, -2]],
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
                 ]
-                break
+            break
             case 'J':
                 this.color = "blue"
                 this.lightColor = "rgb(230, 240, 255)"
                 this.ghostColor = "rgba(230, 240, 255, 0.5)"
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
-                break
+            break
             case 'L':
                 this.color = "orange"
                 this.lightColor = "rgb(255, 224, 204)"
                 this.ghostColor = "rgba(255, 224, 204, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
-                break
+            break
             case 'O':
                 this.color = "yellow"
                 this.lightColor = "rgb(255, 255, 230)"
@@ -180,25 +180,25 @@ class Tetromino {
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
                 this.srs[SPIN.CW] = [[]]
                 this.srs[SPIN.CCW] = [[]]
-                break
+            break
             case 'S':
                 this.color = "green"
                 this.lightColor = "rgb(236, 255, 230)"
                 this.ghostColor = "rgba(236, 255, 230, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
-                break
+            break
             case 'T':
                 this.color = "magenta"
                 this.lightColor= "rgb(242, 230, 255)"
                 this.ghostColor = "rgba(242, 230, 255, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
-                break
+            break
             case 'Z':
                 this.color = "red"
                 this.lightColor = "rgb(255, 230, 230)"
                 this.ghostColor = "rgba(255, 230, 230, 0.5)"
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
-                break
+            break
         }
     }
         
@@ -233,8 +233,7 @@ function drawMino(context, pos, color1, color2=null, spotlight=[0, 0]) {
         gradient.addColorStop(0, color1)
         gradient.addColorStop(1, color2)
         context.fillStyle = gradient
-    }
-    else
+    } else
         context.fillStyle = color1
     var topLeft = pos.mul(MINO_SIZE)
     context.fillRect(...topLeft, MINO_SIZE, MINO_SIZE)
@@ -314,8 +313,7 @@ class Stats {
         if (linesCleared) {
             patternName.push(SCORES[linesCleared].linesClearedName)
             this.combo++
-        }
-        else
+        } else
             this.combo = -1
 
         if (linesCleared || tSpin) {
@@ -433,10 +431,10 @@ class Matrix {
             case STATE.PLAYING:
                 if (tempTexts.length)
                     texts = tempTexts[0]
-                break
+            break
             case STATE.PAUSED:
                 texts = ["PAUSED"]
-                break
+            break
             case STATE.GAME_OVER:
                 texts = ["GAME", "OVER"]
         }
@@ -525,8 +523,7 @@ function move(movement, testMinoesPos=matrix.piece.minoesPos) {
             scheduler.setTimeout(locksDown, stats.lockDelay)
         }
         return true
-    }
-    else {
+    } else {
         return false
     }
 }
@@ -615,8 +612,7 @@ function autorepeat() {
             scheduler.clearTimeout(autorepeat)
             scheduler.setInterval(autorepeat, AUTOREPEAT_PERIOD)
         }
-    }
-    else {
+    } else {
         scheduler.clearTimeout(autorepeat)
         scheduler.clearInterval(autorepeat)
     }
@@ -633,9 +629,8 @@ function keyDownHandler(e) {
                 actionsToRepeat.unshift(action)
                 scheduler.clearTimeout(autorepeat)
                 scheduler.clearInterval(autorepeat)
-                if (action == softDrop) {
+                if (action == softDrop)
                     scheduler.setInterval(autorepeat, stats.fallDelay / 20)
-                }
                 else
                     scheduler.setTimeout(autorepeat, AUTOREPEAT_DELAY)
             }

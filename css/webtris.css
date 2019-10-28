@@ -56,34 +56,34 @@ canvas {
     width: 150px;
 }
 
-.hold {
+#hold {
     width: 120px;
 }
 
-.stats {
+#stats {
     display: flex;
     flex-direction: row;
     margin: 10% 0;
     font-size: 1.2em;
 }
 
-.stats-names {
+#stats-names {
     font-family: 'Share Tech';
     text-align: left;
 }
 
-.stats-values {
+#stats-values {
     text-align: right;
     font-family: 'Share Tech Mono';
     min-width: 90px;
 }
 
-.matrix {
+#matrix {
     margin: 5% 2%;
     border: 0.5px solid grey;
 }
 
-.next {
+#next {
     width: 120px;
     margin: 5% 2%;
 }
