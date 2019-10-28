@@ -16,7 +16,7 @@
         "softDrop"   => "CHUTE LENTE",
         "hardDrop"   => "CHUTE RAPIDE",
         "rotateCW"   => "ROTATION HORAIRE",
-        "rotateCCW:" => "ROTATE INVERSE",
+        "rotateCCW" => "ROTATE INVERSE",
         "hold"       => "GARDE",
         "pause"      => "PAUSE",
     );
