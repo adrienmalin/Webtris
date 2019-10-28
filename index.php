@@ -29,7 +29,7 @@
     }
 ?>
     </div>
-    <div class="play">
+    <div id="play">
         <a href="webtris.html"><b>JOUER</b></a>
     </div>
 </body>

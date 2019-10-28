@@ -26,8 +26,8 @@ body {
 }
 
 h1 {
-    font-size: 3em;
-    margin: 40px 20px 20px 20px;
+    font-size: 50px;
+    margin: 40px;
     text-shadow: 3px 2px rgb(153, 145, 175);
     text-align: center;
 }
@@ -41,7 +41,7 @@ canvas {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    margin: auto;
+    margin: 0 auto;
 }
 
 .flex-space {
@@ -58,6 +58,7 @@ canvas {
 
 #hold {
     width: 120px;
+	justify-content: right;
 }
 
 #stats {

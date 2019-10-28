@@ -338,6 +338,7 @@ class Stats {
         this.div.innerHTML  = `${this.score}<br/>
         ${this.highScore}<br/>
         ${timeFormat(Date.now() - this.startTime)}<br/>
+		<br/>
         ${this.level}<br/>
         ${this.goal}<br/>
         ${this.linesCleared}`
@@ -350,7 +351,7 @@ class Matrix {
         this.context = document.getElementById("matrix").getContext("2d")
         this.context.textAlign = "center"
         this.context.textBaseline = "center"
-        this.context.font = "3vw 'Share Tech', sans-serif"
+        this.context.font = "27px 'Share Tech', sans-serif"
         this.cells = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.width = MATRIX_COLUMNS*MINO_SIZE
         this.height = MATRIX_ROWS*MINO_SIZE
