@@ -29,12 +29,6 @@ function getKey(action) {
         return key
 }
 
-window.onload = function() {
-    document.getElementById("actions").innerHTML = actionLabel.map(action => `<div>${action.label}</div>
-<button type="button" onclick="changeKey(this, '${action.name}')">${getKey(action.name)}</button>
-`).join("\n")
-}
-
 function changeKey(button, action) {
     button.innerHTML = "Touche ?"
     selectedButton = button
@@ -50,4 +44,10 @@ function keyUpHandler(e) {
     }
 }
 
-addEventListener("keyup", keyUpHandler, false)
+window.onload = function() {
+    document.getElementById("actions").innerHTML = actionLabel.map(action => `<div>${action.label}</div>
+<button type="button" onclick="changeKey(this, '${action.name}')">${getKey(action.name)}</button>
+`).join("\n")
+
+    addEventListener("keyup", keyUpHandler, false)
+}
