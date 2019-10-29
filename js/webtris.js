@@ -400,7 +400,7 @@ class Matrix {
                 this.piece.draw(this.context, ghostYOffset)
 
             // Lines cleared
-            this.context.fillStyle = "white"
+            this.context.fillStyle = "rgba(255, 255, 255, 0.5)"
             this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))
         }
 
