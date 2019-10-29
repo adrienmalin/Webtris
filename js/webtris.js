@@ -20,30 +20,37 @@ Array.prototype.pick = function() {
 
 
 const MINO_SIZE =      20
-const NEXT_PIECES =     5
+const NEXT_PIECES =     6
 const HOLD_ROWS =       6
 const HOLD_COLUMNS =    6
-const MATRIX_ROWS =    20
+const MATRIX_ROWS =    24
 const MATRIX_COLUMNS = 10
-const NEXT_ROWS =      20
+const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
-const HELD_PIECE_POSITION =    [2, 2]
-const FALLING_PIECE_POSITION = [4, 0]
-const NEXT_PIECES_POSITIONS = Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+2])
-const LOCK_DELAY =         500
-const FALL_DELAY =        1000
-const AUTOREPEAT_DELAY =   250
-const AUTOREPEAT_PERIOD =   10
-const ANIMATION_DELAY =     100
-const TEMP_TEXTS_DELAY =   700
+const HOLD_BG_COLOR =       ""
+const HOLD_BORDER_COLOR =   ""
+const MATRIX_BG_COLOR =     ""
+const MATRIX_BORDER_COLOR = "#333"
+const NEXT_BG_COLOR =       ""
+const NEXT_BORDER_COLOR =   ""
+const MINO_BORDER_COLOR =   "white"
+const HELD_PIECE_POSITION =    [2, 3]
+const FALLING_PIECE_POSITION = [4, 3]
+const NEXT_PIECES_POSITIONS =  Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
+const LOCK_DELAY =       500
+const FALL_PERIOD =      1000
+const AUTOREPEAT_DELAY = 300
+const AUTOREPEAT_PERIOD = 10
+const ANIMATION_DELAY =  100
+const TEMP_TEXTS_DELAY = 700
 const MOVEMENT = {
     LEFT:  [-1, 0],
     RIGHT: [ 1, 0],
     DOWN:  [ 0, 1]
 }
 const SPIN = {
-    CW:   1,
-    CCW: -1
+    CW:   1,  // ClockWise
+    CCW: -1   // CounterClockWise
 }
 const T_SPIN = {
     NONE: "",
@@ -113,7 +120,7 @@ class Scheduler {
 }
 
 
-shapes = []
+randomBag = []
 class Tetromino {
     constructor(position=null, shape=null) {
         this.pos = position
@@ -122,7 +129,7 @@ class Tetromino {
         this.rotationPoint5Used = false
         this.holdEnabled = true
         this.locked = false
-        this.srs = {}
+        this.srs = {}  // Super Rotation System
         this.srs[SPIN.CW] = [
             [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
             [[0, 0], [ 1, 0], [ 1,  1], [0, -2], [ 1, -2]],
@@ -138,15 +145,15 @@ class Tetromino {
         if (shape)
             this.shape = shape
         else {
-            if (!shapes.length)
-                shapes = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
-            this.shape = shapes.pick()
+            if (!randomBag.length)
+                randomBag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+            this.shape = randomBag.pick()
         }
         switch(this.shape) {
             case 'I':
                 this.color = "rgb(153, 179, 255)"
                 this.lightColor = "rgb(234, 250, 250)"
-                this.ghostColor = "rgba(234, 250, 250, 0.5)"
+                this.transparentColor = "rgba(234, 250, 250, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [2, 0]]
                 this.srs[SPIN.CW] = [
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
@@ -164,19 +171,19 @@ class Tetromino {
             case 'J':
                 this.color = "rgb(153, 255, 255)"
                 this.lightColor = "rgb(230, 240, 255)"
-                this.ghostColor = "rgba(230, 240, 255, 0.5)"
+                this.transparentColor = "rgba(230, 240, 255, 0.5)"
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
             break
             case 'L':
                 this.color = "rgb(255, 204, 153)"
                 this.lightColor = "rgb(255, 224, 204)"
-                this.ghostColor = "rgba(255, 224, 204, 0.5)"
+                this.transparentColor = "rgba(255, 224, 204, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
             break
             case 'O':
                 this.color = "	rgb(255, 255, 153)"
                 this.lightColor = "rgb(255, 255, 230)"
-                this.ghostColor = "rgba(255, 255, 230, 0.5)"
+                this.transparentColor = "rgba(255, 255, 230, 0.5)"
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
                 this.srs[SPIN.CW] = [[]]
                 this.srs[SPIN.CCW] = [[]]
@@ -184,19 +191,19 @@ class Tetromino {
             case 'S':
                 this.color = "rgb(153, 255, 153)"
                 this.lightColor = "rgb(236, 255, 230)"
-                this.ghostColor = "rgba(236, 255, 230, 0.5)"
+                this.transparentColor = "rgba(236, 255, 230, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
             break
             case 'T':
                 this.color = "rgb(204, 153, 255)"
                 this.lightColor= "rgb(242, 230, 255)"
-                this.ghostColor = "rgba(242, 230, 255, 0.5)"
+                this.transparentColor = "rgba(242, 230, 255, 0.5)"
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
             break
             case 'Z':
                 this.color = "rgb(255, 153, 153)"
                 this.lightColor = "rgb(255, 230, 230)"
-                this.ghostColor = "rgba(255, 230, 230, 0.5)"
+                this.transparentColor = "rgba(255, 230, 230, 0.5)"
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
             break
         }
@@ -206,44 +213,164 @@ class Tetromino {
         return this.minoesPos.translate(this.pos)
     }
 
-    draw(context, ghostYOffset=0) {
-        const color = this.locked ? this.lightColor : this.color
-        if (ghostYOffset) {
-            context.save()
-            context.shadowColor = this.ghostColor
-            context.shadowOffsetX = 0
-            context.shadowOffsetY = ghostYOffset * MINO_SIZE
-            context.shadowBlur = 4
-            this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
-            context.restore()
-        }
-        this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
+    drawIn(table) {
+        var bgColor = this.locked ? this.lightColor : this.color
+        this.minoesAbsPos.forEach( pos => {
+            drawMino(table.rows[pos[1]].cells[pos[0]], bgColor, MINO_BORDER_COLOR)})
     }
 }
 
-function drawMino(context, pos, color) {
-    var topLeft = pos.mul(MINO_SIZE)
-    context.fillStyle = color
-    context.fillRect(...topLeft, MINO_SIZE, MINO_SIZE)
-    context.lineWidth = 0.5
-    context.strokeStyle = "white"
-    context.strokeRect(...topLeft, MINO_SIZE, MINO_SIZE)
+
+function drawMino(cell, backgroundColor, borderColor) {
+    cell.style.backgroundColor = backgroundColor
+    cell.style.borderColor = borderColor
 }
 
 
-class HoldQueue {
-    constructor() {
-        this.context = document.getElementById("hold").getContext("2d")
+class MinoesTable {
+    constructor(id, rows, columns, defaultBgColor, defaultBorderColor) {
+        this.table = document.getElementById(id)
+        this.rows = rows
+        this.columns = columns
+        this.defaultBgColor = defaultBgColor
+        this.defaultBorderColor = defaultBorderColor
+        this.width = columns * MINO_SIZE
+        this.height = rows * MINO_SIZE
         this.piece = null
-        this.width = HOLD_COLUMNS*MINO_SIZE
-        this.height = HOLD_ROWS*MINO_SIZE
+        for (var y=0; y < rows; y++) {
+            var row = this.table.insertRow()
+            for (var x=0; x < columns; x++) {
+                row.insertCell()
+            }
+        }
+    }
+
+    clearTable() {
+        for(var y=0; y < this.rows; y++) {
+            for (var x=0; x < this.columns; x++) {
+                var cell = this.table.rows[y].cells[x]
+                drawMino(cell, this.defaultBgColor, this.defaultBorderColor)
+            }
+        }
+    }
+}
+
+class HoldQueue extends MinoesTable {
+    constructor() {
+        super("hold", HOLD_ROWS, HOLD_COLUMNS, HOLD_BG_COLOR, HOLD_BORDER_COLOR)
     }
 
     draw() {
-        this.context.clearRect(0, 0, this.width, this.height)
+        this.clearTable()
+        if (this.piece && state != STATE.PAUSED)
+            this.piece.drawIn(this.table)
+    }
+}
+
+
+class Matrix extends MinoesTable {
+    constructor() {
+        super("matrix", MATRIX_ROWS, MATRIX_COLUMNS, MATRIX_BG_COLOR, MATRIX_BORDER_COLOR)
+        this.lockedMinoes = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
+        this.piece = null
+        /*this.context.textAlign = "center"
+        this.context.textBaseline = "center"
+        this.context.font = "27px 'Share Tech', sans-serif"
+        this.centerX = this.width / 2
+        this.centerY = this.height / 2
+        this.linesCleared = []
+        this.trail = {
+            minoesPos: [],
+            height: 0,
+            gradient: null
+        }*/
+    }
+    
+    cellIsOccupied(x, y) {
+        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_ROWS ? this.lockedMinoes[y][x] : true
+    }
+    
+    spaceToMove(minoesAbsPos) {
+        return !minoesAbsPos.some(pos => this.cellIsOccupied(...pos))
+    }
+    
+    draw() {
+        if (state == STATE.PAUSED) {
+            this.clearTable()
+        } else {
+            // locked minoes
+            for(var y=0; y < this.rows; y++) {
+                for (var x=0; x < this.columns; x++) {
+                    var cell = this.table.rows[y].cells[x]
+                    var bgColor = this.lockedMinoes[y][x]
+                    if (bgColor) drawMino(cell, bgColor, MINO_BORDER_COLOR)
+                    else {
+                        if (y < 4) drawMino(cell, this.defaultBgColor, "transparent")
+                        else drawMino(cell, this.defaultBgColor, MATRIX_BORDER_COLOR)
+                    }
+                }
+            }
+
+            // trail
+            /*if (this.trail.height) {
+                this.context.fillStyle = this.trail.gradient
+                this.trail.minoesPos.forEach(topLeft => {
+                    this.context.fillRect(...topLeft, MINO_SIZE, this.trail.height)
+                })
+            }*/
+            
+            // falling piece
+            /*for (var ghostYOffset = 1; this.spaceToMove(this.piece.minoesAbsPos.translate([0, ghostYOffset])); ghostYOffset++) {}
+               ghostYOffset--*/
+            this.piece.drawIn(this.table)
+
+            // Lines cleared
+            /*this.context.fillStyle = "rgba(255, 255, 255, 0.5)"
+            this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))*/
+        }
+
+        // text
+        /*var texts = []
+        switch(state) {
+            case STATE.PLAYING:
+                if (tempTexts.length)
+                    texts = tempTexts[0]
+            break
+            case STATE.PAUSED:
+                texts = ["PAUSED"]
+            break
+            case STATE.GAME_OVER:
+                texts = ["GAME", "OVER"]
+        }
+        if (texts.length) {
+            this.context.save()
+            this.context.shadowColor = "black"
+            this.context.shadowOffsetX = 1
+            this.context.shadowOffsetY = 1
+            this.context.shadowBlur = 2
+            this.context.fillStyle = "white"
+            if (texts.length == 1)
+                this.context.fillText(texts[0], this.centerX, this.centerY)
+            else {
+                this.context.fillText(texts[0], this.centerX, this.centerY - 20)
+                this.context.fillText(texts[1], this.centerX, this.centerY + 20)
+            }
+            this.context.restore()
+        }*/
+    }
+}
+
+
+class NextQueue extends MinoesTable {
+    constructor() {
+        super("next", NEXT_ROWS, NEXT_COLUMNS, NEXT_BG_COLOR, NEXT_BORDER_COLOR)
+        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
+    }
+
+    draw() {
+        this.clearTable()
         if (state != STATE.PAUSED) {
-            if (this.piece)
-                this.piece.draw(this.context)
+            this.pieces.forEach(piece => piece.drawIn(this.table))
         }
     }
 }
@@ -265,7 +392,7 @@ class Stats {
         this.pauseTime = 0
         this.combo = -1
         this.lockDelay = LOCK_DELAY
-        this.fallDelay = FALL_DELAY
+        this.fallPeriod = FALL_PERIOD
     }
 
     get score() {
@@ -286,12 +413,12 @@ class Stats {
         printTempTexts(["LEVEL", this.level])
         this.goal += 5 * this.level
         if (this.level <= 20)
-            this.fallDelay = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
+            this.fallPeriod = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
         if (this.level > 15)
             this.lockDelay = 500 * Math.pow(0.9, this.level - 15)
     }
 
-    locksDown(tSpin, linesCleared) {
+    lockDown(tSpin, linesCleared) {
         var patternName = []
         var patternScore = 0
         var combo_score = 0
@@ -334,125 +461,6 @@ class Stats {
 }
 
 
-class Matrix {
-    constructor() {
-        this.context = document.getElementById("matrix").getContext("2d")
-        this.context.textAlign = "center"
-        this.context.textBaseline = "center"
-        this.context.font = "27px 'Share Tech', sans-serif"
-        this.cells = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
-        this.width = MATRIX_COLUMNS*MINO_SIZE
-        this.height = MATRIX_ROWS*MINO_SIZE
-        this.centerX = this.width / 2
-        this.centerY = this.height / 2
-        this.piece = null
-        this.trail = {
-            minoesPos: [],
-            height: 0,
-            gradient: null
-        }
-        this.linesCleared = []
-    }
-    
-    cellIsOccupied(x, y) {
-        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_ROWS ? this.cells[y+3][x] : true
-    }
-    
-    spaceToMove(minoesAbsPos) {
-        return !minoesAbsPos.some(pos => this.cellIsOccupied(...pos))
-    }
-    
-    draw() {
-        this.context.clearRect(0, 0, this.width, this.height)
-
-        // grid
-        this.context.strokeStyle = "rgba(128, 128, 128, 128)"
-        this.context.lineWidth = 0.5
-        this.context.beginPath()
-        for (var x = 0; x <= this.width; x += MINO_SIZE) {
-            this.context.moveTo(x, 0);
-            this.context.lineTo(x, this.height);
-        }
-        for (var y = 0; y <= this.height; y += MINO_SIZE) {
-            this.context.moveTo(0, y);
-            this.context.lineTo(this.width, y);
-        }
-        this.context.stroke()
-
-        if (state != STATE.PAUSED) {
-            // locked minoes
-            this.cells.slice(3).forEach((row, y) => row.forEach((color, x) => {
-                if (color) drawMino(this.context, [x, y], color)
-            }))
-
-            // trail
-            if (this.trail.height) {
-                this.context.fillStyle = this.trail.gradient
-                this.trail.minoesPos.forEach(topLeft => {
-                    this.context.fillRect(...topLeft, MINO_SIZE, this.trail.height)
-                })
-            }
-            
-            // falling piece
-            for (var ghostYOffset = 1; this.spaceToMove(this.piece.minoesAbsPos.translate([0, ghostYOffset])); ghostYOffset++) {}
-               ghostYOffset--
-            if (this.piece)
-                this.piece.draw(this.context, ghostYOffset)
-
-            // Lines cleared
-            this.context.fillStyle = "rgba(255, 255, 255, 0.5)"
-            this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))
-        }
-
-        // text
-        var texts = []
-        switch(state) {
-            case STATE.PLAYING:
-                if (tempTexts.length)
-                    texts = tempTexts[0]
-            break
-            case STATE.PAUSED:
-                texts = ["PAUSED"]
-            break
-            case STATE.GAME_OVER:
-                texts = ["GAME", "OVER"]
-        }
-        if (texts.length) {
-            this.context.save()
-            this.context.shadowColor = "black"
-            this.context.shadowOffsetX = 1
-            this.context.shadowOffsetY = 1
-            this.context.shadowBlur = 2
-            this.context.fillStyle = "white"
-            if (texts.length == 1)
-                this.context.fillText(texts[0], this.centerX, this.centerY)
-            else {
-                this.context.fillText(texts[0], this.centerX, this.centerY - 20)
-                this.context.fillText(texts[1], this.centerX, this.centerY + 20)
-            }
-            this.context.restore()
-        }
-    }
-}
-
-
-class NextQueue {
-    constructor() {
-        this.context = document.getElementById("next").getContext("2d") 
-        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
-        this.width = NEXT_COLUMNS*MINO_SIZE
-        this.height = NEXT_ROWS*MINO_SIZE
-    }
-
-    draw() {
-        this.context.clearRect(0, 0, this.width, this.height)
-        if (state != STATE.PAUSED) {
-            this.pieces.forEach(piece => piece.draw(this.context))
-        }
-    }
-}
-
-
 function newLevel(startLevel) {
     stats.newLevel(startLevel)
     generationPhase()
@@ -465,24 +473,24 @@ function generationPhase(held_piece=null) {
         nextQueue.pieces.forEach((piece, i) => piece.pos = NEXT_PIECES_POSITIONS[i])
     }
     matrix.piece.pos = FALLING_PIECE_POSITION
-    if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos)))
+    if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos))){
+        scheduler.clearInterval(lockPhase)
+        scheduler.setInterval(lockPhase, stats.fallPeriod)
         fallingPhase()
-    else
+    } else
         gameOver()
 }
 
 function fallingPhase() {
-    scheduler.clearTimeout(lockPhase)
-    scheduler.clearTimeout(locksDown)
+    scheduler.clearTimeout(lockDown)
     matrix.piece.locked = false
-    scheduler.setTimeout(lockPhase, stats.fallDelay)
 }
 
 function lockPhase() {
     if (!move(MOVEMENT.DOWN)) {
         matrix.piece.locked = true
-        if (!scheduler.timeoutTasks.has(locksDown))
-            scheduler.setTimeout(locksDown, stats.lockDelay)
+        if (!scheduler.timeoutTasks.has(lockDown))
+            scheduler.setTimeout(lockDown, stats.lockDelay)
     }
     requestAnimationFrame(draw)
 }
@@ -498,8 +506,8 @@ function move(movement, testMinoesPos=matrix.piece.minoesPos) {
             fallingPhase()
         else {
             matrix.piece.locked = true
-            scheduler.clearTimeout(locksDown)
-            scheduler.setTimeout(locksDown, stats.lockDelay)
+            scheduler.clearTimeout(lockDown)
+            scheduler.setTimeout(lockDown, stats.lockDelay)
         }
         return true
     } else {
@@ -523,12 +531,12 @@ function rotate(spin) {
     return false
 }
 
-function locksDown(){
-    scheduler.clearInterval(move)
-    if (matrix.piece.minoesAbsPos.every(pos => pos.y < 0))
+function lockDown(){
+    scheduler.clearInterval(lockPhase)
+    if (matrix.piece.minoesAbsPos.every(pos => pos.y < 4))
         game_over()
     else {
-        matrix.piece.minoesAbsPos.forEach(pos => matrix.cells[pos[1]+3][pos[0]] = matrix.piece.color)
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.color)
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
@@ -546,15 +554,15 @@ function locksDown(){
 
         // Complete lines
         matrix.linesCleared = []
-        matrix.cells.forEach((row, y) => {
+        matrix.lockedMinoes.forEach((row, y) => {
             if (row.filter(mino => mino.length).length == MATRIX_COLUMNS) {
-                matrix.cells.splice(y, 1)
-                matrix.cells.unshift(Array(MATRIX_COLUMNS))
+                matrix.lockedMinoes.splice(y, 1)
+                matrix.lockedMinoes.unshift(Array(MATRIX_COLUMNS))
                 matrix.linesCleared.push((y-3) * MINO_SIZE)
             }
         })
 
-        stats.locksDown(tSpin, matrix.linesCleared.length)
+        stats.lockDown(tSpin, matrix.linesCleared.length)
         requestAnimationFrame(draw)
         scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
@@ -572,8 +580,8 @@ function clearLinesCleared() {
 
 function gameOver() {
     state = STATE.GAME_OVER
-    scheduler.clearTimeout(lockPhase)
-    scheduler.clearTimeout(locksDown)
+    scheduler.clearInterval(lockPhase)
+    scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
     requestAnimationFrame(draw)
 
@@ -611,7 +619,7 @@ function keyDownHandler(e) {
                 scheduler.clearTimeout(autorepeat)
                 scheduler.clearInterval(autorepeat)
                 if (action == softDrop)
-                    scheduler.setInterval(autorepeat, stats.fallDelay / 20)
+                    scheduler.setInterval(autorepeat, stats.fallPeriod / 20)
                 else
                     scheduler.setTimeout(autorepeat, AUTOREPEAT_DELAY)
             }
@@ -647,17 +655,18 @@ function softDrop() {
 }
 
 function hardDrop() {
-    scheduler.clearTimeout(lockPhase)
-    scheduler.clearTimeout(locksDown)
-    matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos).map(pos => pos.mul(MINO_SIZE))
+    scheduler.clearInterval(lockPhase)
+    scheduler.clearTimeout(lockDown)
+    /*matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos).map(pos => pos.mul(MINO_SIZE))
     for (matrix.trail.height=0; move(MOVEMENT.DOWN); matrix.trail.height += MINO_SIZE) {
         stats.score += 2
-    }
-    locksDown()
-    matrix.trail.gradient = matrix.context.createLinearGradient(0, 0, 0, matrix.trail.height)
+    }*/
+    while (move(MOVEMENT.DOWN)) {}
+    lockDown()
+    /*matrix.trail.gradient = matrix.context.createLinearGradient(0, 0, 0, matrix.trail.height)
     matrix.trail.gradient.addColorStop(0,"rgba(255, 255, 255, 0)")
-    matrix.trail.gradient.addColorStop(1, matrix.piece.ghostColor)
-    scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
+    matrix.trail.gradient.addColorStop(1, matrix.piece.transparentColor)
+    scheduler.setTimeout(clearTrail, ANIMATION_DELAY)*/
 }
 
 function clearTrail() {
@@ -676,7 +685,7 @@ function rotateCCW() {
 function hold() {
     if (this.matrix.piece.holdEnabled) {
         scheduler.clearInterval(move)
-        scheduler.clearInterval(locksDown)
+        scheduler.clearInterval(lockDown)
         var shape = this.matrix.piece.shape
         this.matrix.piece = this.holdQueue.piece
         this.holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
@@ -688,8 +697,8 @@ function hold() {
 function pause() {
     state = STATE.PAUSED
     stats.pauseTime = Date.now() - stats.startTime
-    scheduler.clearTimeout(lockPhase)
-    scheduler.clearTimeout(locksDown)
+    scheduler.clearInterval(lockPhase)
+    scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
     scheduler.clearInterval(clock)
 }
@@ -697,9 +706,9 @@ function pause() {
 function resume() {
     state = STATE.PLAYING
     stats.startTime = Date.now() - stats.pauseTime
-    scheduler.setTimeout(lockPhase, stats.fallDelay)
+    scheduler.setTimeout(lockPhase, stats.fallPeriod)
     if (matrix.piece.locked)
-        scheduler.setTimeout(locksDown, stats.lockDelay)
+        scheduler.setTimeout(lockDown, stats.lockDelay)
     requestAnimationFrame(draw)
     scheduler.setInterval(clock, 1000)
 }
@@ -718,14 +727,14 @@ function delTempTexts(self) {
 }
 
 function clock() {
-    stats.print()
+    //stats.print()
 }
 
 function draw() {
     holdQueue.draw()
-    stats.print()
     matrix.draw()
     nextQueue.draw()
+    //stats.print()
 }
 
 function getKey(action) {

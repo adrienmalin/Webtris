@@ -5,33 +5,24 @@
     <title>Webtris</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <!--[if lt IE 9]><script type="text/javascript" src="js/excanvas.js"></script><![endif]-->
     <script type="text/javascript" src="js/webtris.js"></script>
 </head>
 <body>
     <h1>WEBTRIS</h1>
     <div id="grid">
-        <canvas id="hold" width="120" height="120"></canvas>
-        <div id="stats-names">
-            SCORE<br/>
-            RECORD<br/>
-            TEMPS<br/>
-            <br />
-            NIVEAU<br/>
-            OBJECTIF<br/>
-            LIGNES
-        </div>
-        <div id="stats-values">
-            0<br/>
-            0<br/>
-            00:00<br/>
-            <br/>
-            0<br/>
-            0<br/>
-            0
-        </div>
-        <canvas id="matrix" width="200" height="400">Votre navigateur ne supporte pas HTML5, veuillez le mettre à jour pour jouer.</canvas>
-        <canvas id="next"width="120" height="400"></canvas>
+        <table id="hold"><table>
+        <table id="matrix"><table>
+        <table id="next"><table>
+        <table id="stats">
+            <tbody>
+                <tr><td class="stat-label">SCORE</td><td class="stat-value" id="score">0</td></tr>
+                <tr><td class="stat-label">RECORD</td><td class="stat-value" id="highScore">0</td></tr>
+                <tr><td class="stat-label">TEMPS</td><td class="stat-value" id="time">00:00</td></tr>
+                <tr><td class="stat-label">NIVEAU</td><td class="stat-value" id="level">0</td></tr>
+                <tr><td class="stat-label">OBJECTIF</td><td class="stat-value" id="goal">0</td></tr>
+                <tr><td class="stat-label">LIGNES</td><td class="stat-value" id="clearedLines">0</td></tr>
+            </tbody>
+        </table>
     </div>
     <div id="play">
         <a href="webtris.html">REJOUER</a>
