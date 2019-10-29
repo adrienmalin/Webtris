@@ -213,7 +213,7 @@ class Tetromino {
             context.shadowColor = this.ghostColor
             context.shadowOffsetX = 0
             context.shadowOffsetY = ghostYOffset * MINO_SIZE
-            context.shadowBlur = 3
+            context.shadowBlur = 4
             this.minoesAbsPos.forEach(pos => drawMino(context, pos, color))
             context.restore()
         }
@@ -578,7 +578,7 @@ function gameOver() {
     requestAnimationFrame(draw)
 
     if (stats.score == stats.highScore) {
-        alert("Bravo ! Vous avez battu votre précédent record.")
+        alert("Bravo !\nVous avez battu votre précédent record.")
         localStorage.setItem('highScore', stats.highScore)
     }
 }

@@ -12,12 +12,12 @@
     <div id="actions">
 <?php
     function addButton($action, $label) {
-        echo "        <div>$label</div>\n";
-        echo "        <button type='button' onclick='changeKey(this, \"$action\")'>\n";
-        echo "            <script>getKey(\"$action\")</script>\n";
-        echo "        </button>\n";
-    }
-    
+?>
+        <div><?=$label?></div>
+        <button type='button' onclick='changeKey(this, "<?=$action?>")'>
+            <script>getKey("<?=$action?>")</script>
+        </button>
+<?php    }
     addButton("moveLeft", "GAUCHE");
     addButton("moveRight", "DROITE");
     addButton("softDrop", "CHUTE LENTE");
