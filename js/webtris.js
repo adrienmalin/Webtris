@@ -429,6 +429,7 @@ function generationPhase(held_piece=null) {
         nextQueue.pieces.push(new Tetromino())
         nextQueue.pieces.forEach((piece, i) => piece.pos = NEXT_PIECES_POSITIONS[i])
     }
+    nextQueue.draw()
     matrix.piece.pos = FALLING_PIECE_POSITION
     if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos))){
         scheduler.clearInterval(lockPhase)
@@ -441,6 +442,7 @@ function generationPhase(held_piece=null) {
 function fallingPhase() {
     scheduler.clearTimeout(lockDown)
     matrix.piece.locked = false
+    matrix.draw()
 }
 
 function lockPhase() {
@@ -448,8 +450,8 @@ function lockPhase() {
         matrix.piece.locked = true
         if (!scheduler.timeoutTasks.has(lockDown))
             scheduler.setTimeout(lockDown, stats.lockDelay)
+        matrix.draw()
     }
-    requestAnimationFrame(draw)
 }
 
 function move(movement, testMinoesPos=matrix.piece.minoesPos) {
@@ -466,6 +468,7 @@ function move(movement, testMinoesPos=matrix.piece.minoesPos) {
             scheduler.clearTimeout(lockDown)
             scheduler.setTimeout(lockDown, stats.lockDelay)
         }
+        matrix.draw()
         return true
     } else {
         return false
@@ -520,7 +523,7 @@ function lockDown(){
         })
 
         stats.lockDown(tSpin, matrix.clearedLines.length)
-        requestAnimationFrame(draw)
+        matrix.draw()
         scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
         if (stats.goal <= 0)
@@ -532,7 +535,7 @@ function lockDown(){
 
 function clearLinesCleared() {
     matrix.clearedLines = []
-    requestAnimationFrame(draw)
+    matrix.draw()
 }
 
 function gameOver() {
@@ -541,7 +544,6 @@ function gameOver() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
-    requestAnimationFrame(draw)
 
     if (stats.score == stats.highScore) {
         alert("Bravo !\nVous avez battu votre précédent record.")
@@ -552,7 +554,6 @@ function gameOver() {
 function autorepeat() {
     if (actionsToRepeat.length) {
         actionsToRepeat[0]()
-        requestAnimationFrame(draw)
         if (scheduler.timeoutTasks.has(autorepeat)) {
             scheduler.clearTimeout(autorepeat)
             scheduler.setInterval(autorepeat, AUTOREPEAT_PERIOD)
@@ -571,7 +572,6 @@ function keyDownHandler(e) {
         if (e.key in actions[state]) {
             action = actions[state][e.key]
             action()
-            requestAnimationFrame(draw)
             if (REPEATABLE_ACTIONS.includes(action)) {
                 actionsToRepeat.unshift(action)
                 scheduler.clearTimeout(autorepeat)
@@ -626,7 +626,7 @@ function hardDrop() {
 
 function clearTrail() {
     matrix.trail.height = 0
-    requestAnimationFrame(draw)
+    matrix.draw()
 }
 
 function rotateCW() {
@@ -638,14 +638,16 @@ function rotateCCW() {
 }
 
 function hold() {
-    if (this.matrix.piece.holdEnabled) {
+    if (matrix.piece.holdEnabled) {
         scheduler.clearInterval(move)
         scheduler.clearInterval(lockDown)
-        var shape = this.matrix.piece.shape
-        this.matrix.piece = this.holdQueue.piece
-        this.holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
-        this.holdQueue.piece.holdEnabled = false
-        this.generationPhase(this.matrix.piece)
+        var shape = matrix.piece.shape
+        matrix.piece = holdQueue.piece
+        holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
+        holdQueue.piece.holdEnabled = false
+        holdQueue.draw()
+        generationPhase(matrix.piece)
+        matrix.piece.holdEnabled = false
     }
 }
 
@@ -657,6 +659,9 @@ function pause() {
     scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
     scheduler.clearInterval(clock)
+    hold.draw()
+    matrix.draw()
+    next.draw()
 }
 
 function resume() {
@@ -666,8 +671,10 @@ function resume() {
     scheduler.setTimeout(lockPhase, stats.fallPeriod)
     if (matrix.piece.locked)
         scheduler.setTimeout(lockDown, stats.lockDelay)
-    requestAnimationFrame(draw)
     scheduler.setInterval(clock, 1000)
+    hold.draw()
+    matrix.draw()
+    next.draw()
 }
 
 function printTempTexts(texts) {
@@ -686,12 +693,6 @@ function delTempTexts(self) {
         scheduler.clearInterval(delTempTexts)
         messageDiv.innerHTML = ""
     }
-}
-
-function draw() {
-    holdQueue.draw()
-    matrix.draw()
-    nextQueue.draw()
 }
 
 function getKey(action) {
