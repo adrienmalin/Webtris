@@ -43,7 +43,7 @@ a {
     font-size: 1em;
     border-style: outset;
     border-width: 2px;
-    border-radius: 5px;
+    border-radius: 3px;
     color: black;
     background-color: white;
     padding: 5px;
@@ -69,20 +69,22 @@ a:active {
 }
 
 #grid {
+    position: relative;
     display: grid;
-    grid-template-columns: 6fr 10fr 6fr;
+    grid-template-columns: 120px 200px 120px;
     grid-gap: 20px;
     margin: auto;
-    width: 550px;
+    width: 480px;
 }
 
 table {
     table-layout: fixed;
     border-spacing: 0;
+    width: 0;
 }
 
 td {
-    border: 1px outset transparent;
+    border: 1px solid transparent;
 }
 
 #hold {
@@ -152,7 +154,7 @@ td {
     border-color: white;
 }
 
-.locked-mino {
+.locked-piece {
     background-color: white;
     border-color: white;
 }
@@ -163,22 +165,21 @@ td {
 }
 
 .trail {
-    background-color: rgba(255, 255, 255, 0.5);
-    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
 }
 
 .ghost {
-    background-color: rgba(255, 255, 255, 0.5);
-    border-color: rgba(128, 128, 128, 0.5);
+    background-color: rgba(255, 255, 255, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
     border-style: inset;
 }
 
 #stats {
     grid-column: 1;
     grid-row: 2;
-    width: 0;
     height: 0;
-    table-layout: auto;
+    width: 120px;
 }
 
 .stat-label {
@@ -189,4 +190,16 @@ td {
 .stat-value {
     font-family: 'Share Tech Mono';
     text-align: right;
+}
+
+#message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 19px;
+    text-shadow: 1px 1px black;
+    text-align: center;
+    font-weight: bold;
 }

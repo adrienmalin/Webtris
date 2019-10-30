@@ -27,7 +27,7 @@ const MATRIX_INVISIBLE_ROWS = 4
 const MATRIX_COLUMNS = 10
 const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
-const LOCKED_CLASS = "locked-mino"
+const LOCKED_PIECE_CLASS = "locked-piece"
 const INVISIBLE_ROW_CLASS = "invisible-row"
 const VISIBLE_ROW_CLASS = "visible-row"
 const CLEARED_LINE_CLASS = "cleared-line"
@@ -202,10 +202,10 @@ class Tetromino {
 
 class MinoesTable {
     constructor(id, rows, columns) {
-        this.table = document.getElementById(id)
         this.rows = rows
         this.columns = columns
         this.piece = null
+        this.table = document.getElementById(id)
         for (var y=0; y < rows; y++) {
             var row = this.table.insertRow()
             for (var x=0; x < columns; x++) {
@@ -218,9 +218,9 @@ class MinoesTable {
         this.table.rows[y].cells[x].className = className
     }
 
-    drawPiece(piece, className=null) {
-        if (!className) className = piece.className
-        piece.minoesAbsPos.forEach(pos => this.table.rows[pos[1]].cells[pos[0]].className = piece.shape)
+    drawPiece(piece) {
+        var className = piece.locked ? LOCKED_PIECE_CLASS : piece.shape
+        piece.minoesAbsPos.forEach(pos => this.drawMino(...pos, className))
     }
 
     clearTable() {
@@ -250,16 +250,11 @@ class Matrix extends MinoesTable {
         super("matrix", MATRIX_ROWS, MATRIX_COLUMNS)
         this.lockedMinoes = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.piece = null
-        this.linesCleared = []
+        this.clearedLines = []
         this.trail = {
             minoesPos: [],
             height: 0
         }
-        /*this.context.textAlign = "center"
-        this.context.textBaseline = "center"
-        this.context.font = "27px 'Share Tech', sans-serif"
-        this.centerX = this.width / 2
-        this.centerY = this.height / 2*/
     }
     
     cellIsOccupied(x, y) {
@@ -275,7 +270,7 @@ class Matrix extends MinoesTable {
         if (state == STATE.PAUSED) {
             for (var y=0; y < this.rows; y++) {
                 for (var x=0; x < this.columns; x++) {
-                    if (this.linesCleared.includes(y)) var className = CLEARED_LINE_CLASS
+                    if (this.clearedLines.includes(y)) var className = CLEARED_LINE_CLASS
                     else {
                         if (y < MATRIX_INVISIBLE_ROWS) var className = INVISIBLE_ROW_CLASS
                         else var className = VISIBLE_ROW_CLASS
@@ -288,7 +283,7 @@ class Matrix extends MinoesTable {
                 for (var x=0; x < this.columns; x++) {
                     var className = this.lockedMinoes[y][x]
                     if (!className) {
-                        if (this.linesCleared.includes(y)) className = CLEARED_LINE_CLASS
+                        if (this.clearedLines.includes(y)) className = CLEARED_LINE_CLASS
                         else {
                             if (y < MATRIX_INVISIBLE_ROWS) className = INVISIBLE_ROW_CLASS
                             else className = VISIBLE_ROW_CLASS
@@ -306,44 +301,14 @@ class Matrix extends MinoesTable {
             }
             
             //ghost
-            if (!this.piece.locked) {
+            if (!this.piece.locked && state != STATE.GAME_OVER) {
                 for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
                 ghost.pos[1]--
                 this.drawPiece(ghost)
             }
 
-            var className = this.piece.locked ? LOCKED_CLASS : this.piece.className
-            this.drawPiece(this.piece, this.piece.locked ? LOCKED_CLASS : this.piece.className)
+            this.drawPiece(this.piece)
         }
-
-        // text
-        /*var texts = []
-        switch(state) {
-            case STATE.PLAYING:
-                if (tempTexts.length)
-                    texts = tempTexts[0]
-            break
-            case STATE.PAUSED:
-                texts = ["PAUSED"]
-            break
-            case STATE.GAME_OVER:
-                texts = ["GAME", "OVER"]
-        }
-        if (texts.length) {
-            this.context.save()
-            this.context.shadowColor = "black"
-            this.context.shadowOffsetX = 1
-            this.context.shadowOffsetY = 1
-            this.context.shadowBlur = 2
-            this.context.fillStyle = "white"
-            if (texts.length == 1)
-                this.context.fillText(texts[0], this.centerX, this.centerY)
-            else {
-                this.context.fillText(texts[0], this.centerX, this.centerY - 20)
-                this.context.fillText(texts[1], this.centerX, this.centerY + 20)
-            }
-            this.context.restore()
-        }*/
     }
 }
 
@@ -370,11 +335,16 @@ timeFormat = new Intl.DateTimeFormat("fr-FR", {
 
 class Stats {
     constructor () {
-        this.div = document.getElementById("stats-values")
+        this.scoreCell = document.getElementById("score")
+        this.highScoreCell = document.getElementById("highScore")
+        this.timeCell = document.getElementById("time")
+        this.levelCell = document.getElementById("level")
+        this.goalCell = document.getElementById("goal")
+        this.clearedLinesCell = document.getElementById("clearedLines")
         this._score = 0
         this.highScore = localStorage.getItem('highScore') || 0
         this.goal = 0
-        this.linesCleared = 0
+        this.clearedLines = 0
         this.startTime = Date.now()
         this.pauseTime = 0
         this.combo = -1
@@ -388,8 +358,10 @@ class Stats {
 
     set score(score) {
         this._score = score
+        this.scoreCell.innerHTML = this._score
         if (score > this.highScore)
             this.highScore = score
+            this.highScoreCell.innerHTML = this.highScore
     }
 
     newLevel(level=null) {
@@ -397,53 +369,51 @@ class Stats {
             this.level = level
         else
             this.level++
-        printTempTexts(["LEVEL", this.level])
+        this.levelCell.innerHTML = this.level
+        printTempTexts(`LEVEL<br/>${this.level}`)
         this.goal += 5 * this.level
+        this.goalCell.innerHTML = this.goal
         if (this.level <= 20)
             this.fallPeriod = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
         if (this.level > 15)
             this.lockDelay = 500 * Math.pow(0.9, this.level - 15)
     }
 
-    lockDown(tSpin, linesCleared) {
+    lockDown(tSpin, clearedLines) {
         var patternName = []
         var patternScore = 0
         var combo_score = 0
         
         if (tSpin)
             patternName.push(tSpin)
-        if (linesCleared) {
-            patternName.push(SCORES[linesCleared].linesClearedName)
+        if (clearedLines) {
+            patternName.push(SCORES[clearedLines].linesClearedName)
             this.combo++
         } else
             this.combo = -1
 
-        if (linesCleared || tSpin) {
-            this.linesCleared += linesCleared
-            patternScore = SCORES[linesCleared][tSpin]
+        if (clearedLines || tSpin) {
+            this.clearedLines += clearedLines
+            this.clearedLinesCell.innerHTML = clearedLines
+            patternScore = SCORES[clearedLines][tSpin]
             this.goal -= patternScore
+            this.goalCell.innerHTML = this.goal
             patternScore *= 100 * this.level
             patternName = patternName.join("\n")
         }
         if (this.combo >= 1)
-            combo_score = (linesCleared == 1 ? 20 : 50) * this.combo * this.level
+            combo_score = (clearedLines == 1 ? 20 : 50) * this.combo * this.level
 
         this.score += patternScore + combo_score
 
         if (patternScore)
-            printTempTexts([patternName, patternScore])
+            printTempTexts(`${patternName}<br/>${patternScore}`)
         if (combo_score)
-            printTempTexts([`COMBO x${this.combo}`, combo_score])
+            printTempTexts(`COMBO x${this.combo}<br/>${combo_score}`)
     }
 
-    print() {
-        this.div.innerHTML  = `${this.score}<br/>
-        ${this.highScore}<br/>
-        ${timeFormat(Date.now() - this.startTime)}<br/>
-		<br/>
-        ${this.level}<br/>
-        ${this.goal}<br/>
-        ${this.linesCleared}`
+    printTime() {
+        this.timeCell.innerHTML = timeFormat(Date.now() - this.startTime)
     }
 }
 
@@ -523,7 +493,7 @@ function lockDown(){
     if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS))
         game_over()
     else {
-        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.className)
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.shape)
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
@@ -540,16 +510,16 @@ function lockDown(){
         }
 
         // Complete lines
-        matrix.linesCleared = []
+        matrix.clearedLines = []
         matrix.lockedMinoes.forEach((row, y) => {
-            if (row.filter(mino => mino.length).length == MATRIX_COLUMNS) {
+            if (row.filter(lockedMino => lockedMino.length).length == MATRIX_COLUMNS) {
                 matrix.lockedMinoes.splice(y, 1)
                 matrix.lockedMinoes.unshift(Array(MATRIX_COLUMNS))
-                matrix.linesCleared.push(y)
+                matrix.clearedLines.push(y)
             }
         })
 
-        stats.lockDown(tSpin, matrix.linesCleared.length)
+        stats.lockDown(tSpin, matrix.clearedLines.length)
         requestAnimationFrame(draw)
         scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
 
@@ -561,12 +531,13 @@ function lockDown(){
 }
 
 function clearLinesCleared() {
-    matrix.linesCleared = []
+    matrix.clearedLines = []
     requestAnimationFrame(draw)
 }
 
 function gameOver() {
     state = STATE.GAME_OVER
+    messageDiv.innerHTML = "GAME<br/>OVER"
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
@@ -681,6 +652,7 @@ function hold() {
 function pause() {
     state = STATE.PAUSED
     stats.pauseTime = Date.now() - stats.startTime
+    messageDiv.innerHTML = "PAUSED"
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
@@ -690,6 +662,7 @@ function pause() {
 function resume() {
     state = STATE.PLAYING
     stats.startTime = Date.now() - stats.pauseTime
+    messageDiv.innerHTML = ""
     scheduler.setTimeout(lockPhase, stats.fallPeriod)
     if (matrix.piece.locked)
         scheduler.setTimeout(lockDown, stats.lockDelay)
@@ -699,34 +672,39 @@ function resume() {
 
 function printTempTexts(texts) {
     tempTexts.push(texts)
+    messageDiv.innerHTML = tempTexts[0]
     if (!scheduler.intervalTasks.has(delTempTexts))
         scheduler.setInterval(delTempTexts, TEMP_TEXTS_DELAY)
 }
 
 function delTempTexts(self) {
-    if (tempTexts.length)
+    if (tempTexts.length) 
         tempTexts.shift()
-    else
+    if (tempTexts.length) 
+        messageDiv.innerHTML = tempTexts[0]
+    else {
         scheduler.clearInterval(delTempTexts)
-}
-
-function clock() {
-    //stats.print()
+        messageDiv.innerHTML = ""
+    }
 }
 
 function draw() {
     holdQueue.draw()
     matrix.draw()
     nextQueue.draw()
-    //stats.print()
 }
 
 function getKey(action) {
     return localStorage.getItem(action) || actionsDefaultKeys[action]
 }
 
+function clock() {
+    stats.printTime()
+}
+
 window.onload = function() {
     tempTexts = []
+    messageDiv = document.getElementById("message")
 
     holdQueue = new HoldQueue()
     stats = new Stats()
