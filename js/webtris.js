@@ -406,10 +406,12 @@ class Stats {
 
         this.score += patternScore + combo_score
 
-        if (patternScore)
-            printTempTexts(`${patternName}<br/>${patternScore}`)
-        if (combo_score)
-            printTempTexts(`COMBO x${this.combo}<br/>${combo_score}`)
+        if (patternScore) {
+            var messages = [patternName, patternScore]
+            if (combo_score)
+                messages.push(`COMBO x${this.combo}`, combo_score)
+                printTempTexts(messages.join("<br/>"))
+        }
     }
 
     printTime() {
