@@ -23,6 +23,7 @@ const NEXT_PIECES =     6
 const HOLD_ROWS =       6
 const HOLD_COLUMNS =    6
 const MATRIX_ROWS =    24
+const MATRIX_INVISIBLE_ROWS = 4
 const MATRIX_COLUMNS = 10
 const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
@@ -30,6 +31,8 @@ const HOLD_BG_COLOR =       ""
 const HOLD_BORDER_COLOR =   ""
 const MATRIX_BG_COLOR =     ""
 const MATRIX_BORDER_COLOR = "#333"
+const MATRIX_INVISIBLE_BORDER_COLOR = ""
+const LINE_CLEARED_COLOR = "white"
 const NEXT_BG_COLOR =       ""
 const NEXT_BORDER_COLOR =   ""
 const MINO_BORDER_COLOR =   "white"
@@ -305,13 +308,20 @@ class Matrix extends MinoesTable {
         } else {
             // locked minoes
             for(var y=0; y < this.rows; y++) {
-                for (var x=0; x < this.columns; x++) {
-                    var cell = this.table.rows[y].cells[x]
-                    var bgColor = this.lockedMinoes[y][x]
-                    if (bgColor) drawMino(cell, bgColor, MINO_BORDER_COLOR)
-                    else {
-                        if (y < 4) drawMino(cell, this.defaultBgColor, "transparent")
-                        else drawMino(cell, this.defaultBgColor, MATRIX_BORDER_COLOR)
+                if (this.linesCleared.includes(y)) {
+                    for (var x=0; x < this.columns; x++) {
+                        var cell = this.table.rows[y].cells[x]
+                        drawMino(cell, LINE_CLEARED_COLOR, LINE_CLEARED_COLOR)
+                    }
+                } else {
+                    for (var x=0; x < this.columns; x++) {
+                        var cell = this.table.rows[y].cells[x]
+                        var bgColor = this.lockedMinoes[y][x]
+                        if (bgColor) drawMino(cell, bgColor, MINO_BORDER_COLOR)
+                        else {
+                            if (y < MATRIX_INVISIBLE_ROWS) drawMino(cell, this.defaultBgColor, MATRIX_INVISIBLE_BORDER_COLOR)
+                            else drawMino(cell, this.defaultBgColor, MATRIX_BORDER_COLOR)
+                        }
                     }
                 }
             }
@@ -326,15 +336,15 @@ class Matrix extends MinoesTable {
                 })
             }
             
-            var ghost = this.piece.ghost
-            for (; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
-            ghost.pos[1]--
-            ghost.drawIn(this.table)
-            this.piece.drawIn(this.table)
+            //ghost
+            if (!this.piece.locked) {
+                var ghost = this.piece.ghost
+                for (; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
+                ghost.pos[1]--
+                ghost.drawIn(this.table)
+            }
 
-            // Lines cleared
-            /*this.context.fillStyle = "rgba(255, 255, 255, 0.5)"
-            this.linesCleared.forEach(y => this.context.fillRect(0, y, this.width, MINO_SIZE))*/
+            this.piece.drawIn(this.table)
         }
 
         // text
@@ -541,7 +551,7 @@ function rotate(spin) {
 
 function lockDown(){
     scheduler.clearInterval(lockPhase)
-    if (matrix.piece.minoesAbsPos.every(pos => pos.y < 4))
+    if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS))
         game_over()
     else {
         matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.color)
@@ -666,7 +676,7 @@ function hardDrop() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos)
-    for (matrix.trail.height=0; move(MOVEMENT.DOWN); matrix.trail.height ++) {
+    for (matrix.trail.height=0; move(MOVEMENT.DOWN); matrix.trail.height++) {
         stats.score += 2
     }
     while (move(MOVEMENT.DOWN)) {}
