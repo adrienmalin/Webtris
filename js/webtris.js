@@ -27,21 +27,18 @@ const MATRIX_INVISIBLE_ROWS = 4
 const MATRIX_COLUMNS = 10
 const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
-const HOLD_BG_COLOR =       ""
-const HOLD_BORDER_COLOR =   ""
-const MATRIX_BG_COLOR =     ""
-const MATRIX_BORDER_COLOR = "#333"
-const MATRIX_INVISIBLE_BORDER_COLOR = ""
-const LINE_CLEARED_COLOR = "white"
-const NEXT_BG_COLOR =       ""
-const NEXT_BORDER_COLOR =   ""
-const MINO_BORDER_COLOR =   "white"
+const LOCKED_CLASS = "locked-mino"
+const INVISIBLE_ROW_CLASS = "invisible-row"
+const VISIBLE_ROW_CLASS = "visible-row"
+const CLEARED_LINE_CLASS = "cleared-line"
+const TRAIL_CLASS = "trail"
+const GHOST_CLASS = "ghost"
 const HELD_PIECE_POSITION =    [2, 3]
 const FALLING_PIECE_POSITION = [4, 3]
 const NEXT_PIECES_POSITIONS =  Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
 const LOCK_DELAY =       500
 const FALL_PERIOD =     1000
-const AUTOREPEAT_DELAY = 300
+const AUTOREPEAT_DELAY = 200
 const AUTOREPEAT_PERIOD = 10
 const ANIMATION_DELAY =  100
 const TEMP_TEXTS_DELAY = 700
@@ -131,7 +128,6 @@ class Tetromino {
         this.rotationPoint5Used = false
         this.holdEnabled = true
         this.locked = false
-        this.borderColor = MINO_BORDER_COLOR
         this.srs = {}  // Super Rotation System
         this.srs[SPIN.CW] = [
             [[0, 0], [-1, 0], [-1, -1], [0,  2], [-1,  2]],
@@ -149,14 +145,11 @@ class Tetromino {
             this.shape = shape
         else {
             if (!randomBag.length)
-                randomBag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+                randomBag = ['tetromino-I', 'tetromino-J', 'tetromino-L', 'tetromino-O', 'tetromino-S', 'tetromino-T', 'tetromino-Z']
             this.shape = randomBag.pick()
         }
         switch(this.shape) {
-            case 'I':
-                this.color = "rgb(153, 179, 255)"
-                this.lightColor = "rgb(234, 250, 250)"
-                this.transparentColor = "rgba(234, 250, 250, 0.5)"
+            case 'tetromino-I':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [2, 0]]
                 this.srs[SPIN.CW] = [
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
@@ -171,42 +164,24 @@ class Tetromino {
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
                 ]
             break
-            case 'J':
-                this.color = "rgb(153, 255, 255)"
-                this.lightColor = "rgb(230, 240, 255)"
-                this.transparentColor = "rgba(230, 240, 255, 0.5)"
+            case 'tetromino-J':
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
             break
-            case 'L':
-                this.color = "rgb(255, 204, 153)"
-                this.lightColor = "rgb(255, 224, 204)"
-                this.transparentColor = "rgba(255, 224, 204, 0.5)"
+            case 'tetromino-L':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
             break
-            case 'O':
-                this.color = "	rgb(255, 255, 153)"
-                this.lightColor = "rgb(255, 255, 230)"
-                this.transparentColor = "rgba(255, 255, 230, 0.5)"
+            case 'tetromino-O':
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
                 this.srs[SPIN.CW] = [[]]
                 this.srs[SPIN.CCW] = [[]]
             break
-            case 'S':
-                this.color = "rgb(153, 255, 153)"
-                this.lightColor = "rgb(236, 255, 230)"
-                this.transparentColor = "rgba(236, 255, 230, 0.5)"
+            case 'tetromino-S':
                 this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
             break
-            case 'T':
-                this.color = "rgb(204, 153, 255)"
-                this.lightColor= "rgb(242, 230, 255)"
-                this.transparentColor = "rgba(242, 230, 255, 0.5)"
+            case 'tetromino-T':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
             break
-            case 'Z':
-                this.color = "rgb(255, 153, 153)"
-                this.lightColor = "rgb(255, 230, 230)"
-                this.transparentColor = "rgba(255, 230, 230, 0.5)"
+            case 'tetromino-Z':
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
             break
         }
@@ -218,33 +193,18 @@ class Tetromino {
 
     get ghost() {
         var ghost = new Tetromino(Array.from(this.pos), this.shape)
-        ghost.color = this.transparentColor
-        ghost.borderColor = this.transparentColor
         ghost.minoesPos = Array.from(this.minoesPos)
+        ghost.shape = GHOST_CLASS
         return ghost
     }
-
-    drawIn(table) {
-        var bgColor = this.locked ? this.lightColor : this.color
-        this.minoesAbsPos.forEach( pos => {
-            drawMino(table.rows[pos[1]].cells[pos[0]], bgColor, this.borderColor)})
-    }
-}
-
-
-function drawMino(cell, backgroundColor, borderColor) {
-    cell.style.backgroundColor = backgroundColor
-    cell.style.borderColor = borderColor
 }
 
 
 class MinoesTable {
-    constructor(id, rows, columns, defaultBgColor, defaultBorderColor) {
+    constructor(id, rows, columns) {
         this.table = document.getElementById(id)
         this.rows = rows
         this.columns = columns
-        this.defaultBgColor = defaultBgColor
-        this.defaultBorderColor = defaultBorderColor
         this.piece = null
         for (var y=0; y < rows; y++) {
             var row = this.table.insertRow()
@@ -254,11 +214,19 @@ class MinoesTable {
         }
     }
 
+    drawMino(x, y, className) {
+        this.table.rows[y].cells[x].className = className
+    }
+
+    drawPiece(piece, className=null) {
+        if (!className) className = piece.className
+        piece.minoesAbsPos.forEach(pos => this.table.rows[pos[1]].cells[pos[0]].className = piece.shape)
+    }
+
     clearTable() {
         for(var y=0; y < this.rows; y++) {
             for (var x=0; x < this.columns; x++) {
-                var cell = this.table.rows[y].cells[x]
-                drawMino(cell, this.defaultBgColor, this.defaultBorderColor)
+                this.drawMino(x, y, INVISIBLE_ROW_CLASS)
             }
         }
     }
@@ -266,20 +234,20 @@ class MinoesTable {
 
 class HoldQueue extends MinoesTable {
     constructor() {
-        super("hold", HOLD_ROWS, HOLD_COLUMNS, HOLD_BG_COLOR, HOLD_BORDER_COLOR)
+        super("hold", HOLD_ROWS, HOLD_COLUMNS)
     }
 
     draw() {
         this.clearTable()
         if (this.piece && state != STATE.PAUSED)
-            this.piece.drawIn(this.table)
+            this.drawPiece(this.piece)
     }
 }
 
 
 class Matrix extends MinoesTable {
     constructor() {
-        super("matrix", MATRIX_ROWS, MATRIX_COLUMNS, MATRIX_BG_COLOR, MATRIX_BORDER_COLOR)
+        super("matrix", MATRIX_ROWS, MATRIX_COLUMNS)
         this.lockedMinoes = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.piece = null
         this.linesCleared = []
@@ -303,48 +271,49 @@ class Matrix extends MinoesTable {
     }
     
     draw() {
+        // grid
         if (state == STATE.PAUSED) {
-            this.clearTable()
-        } else {
-            // locked minoes
-            for(var y=0; y < this.rows; y++) {
-                if (this.linesCleared.includes(y)) {
-                    for (var x=0; x < this.columns; x++) {
-                        var cell = this.table.rows[y].cells[x]
-                        drawMino(cell, LINE_CLEARED_COLOR, LINE_CLEARED_COLOR)
+            for (var y=0; y < this.rows; y++) {
+                for (var x=0; x < this.columns; x++) {
+                    if (this.linesCleared.includes(y)) var className = CLEARED_LINE_CLASS
+                    else {
+                        if (y < MATRIX_INVISIBLE_ROWS) var className = INVISIBLE_ROW_CLASS
+                        else var className = VISIBLE_ROW_CLASS
                     }
-                } else {
-                    for (var x=0; x < this.columns; x++) {
-                        var cell = this.table.rows[y].cells[x]
-                        var bgColor = this.lockedMinoes[y][x]
-                        if (bgColor) drawMino(cell, bgColor, MINO_BORDER_COLOR)
+                    this.drawMino(x, y, className)
+                }
+            }
+        } else {
+            for (var y=0; y < this.rows; y++) {
+                for (var x=0; x < this.columns; x++) {
+                    var className = this.lockedMinoes[y][x]
+                    if (!className) {
+                        if (this.linesCleared.includes(y)) className = CLEARED_LINE_CLASS
                         else {
-                            if (y < MATRIX_INVISIBLE_ROWS) drawMino(cell, this.defaultBgColor, MATRIX_INVISIBLE_BORDER_COLOR)
-                            else drawMino(cell, this.defaultBgColor, MATRIX_BORDER_COLOR)
+                            if (y < MATRIX_INVISIBLE_ROWS) className = INVISIBLE_ROW_CLASS
+                            else className = VISIBLE_ROW_CLASS
                         }
                     }
+                    this.drawMino(x, y, className)
                 }
             }
 
             // trail
             if (this.trail.height) {
                 this.trail.minoesPos.forEach(pos => {
-                    for (var dy=0; dy < this.trail.height; dy++) {
-                        var cell = this.table.rows[pos[1]+dy].cells[pos[0]]
-                        drawMino(cell, this.piece.transparentColor, this.piece.transparentColor)
-                    }
+                    for (var dy=0; dy < this.trail.height; dy++) this.drawMino(pos[0], pos[1]+dy, TRAIL_CLASS)
                 })
             }
             
             //ghost
             if (!this.piece.locked) {
-                var ghost = this.piece.ghost
-                for (; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
+                for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
                 ghost.pos[1]--
-                ghost.drawIn(this.table)
+                this.drawPiece(ghost)
             }
 
-            this.piece.drawIn(this.table)
+            var className = this.piece.locked ? LOCKED_CLASS : this.piece.className
+            this.drawPiece(this.piece, this.piece.locked ? LOCKED_CLASS : this.piece.className)
         }
 
         // text
@@ -381,14 +350,14 @@ class Matrix extends MinoesTable {
 
 class NextQueue extends MinoesTable {
     constructor() {
-        super("next", NEXT_ROWS, NEXT_COLUMNS, NEXT_BG_COLOR, NEXT_BORDER_COLOR)
+        super("next", NEXT_ROWS, NEXT_COLUMNS)
         this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
     }
 
     draw() {
         this.clearTable()
         if (state != STATE.PAUSED) {
-            this.pieces.forEach(piece => piece.drawIn(this.table))
+            this.pieces.forEach(piece => this.drawPiece(piece))
         }
     }
 }
@@ -554,11 +523,11 @@ function lockDown(){
     if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS))
         game_over()
     else {
-        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.color)
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.className)
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
-        if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
+        if (matrix.piece.rotatedLast && matrix.piece.shape == "tetromino-T") {
             const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(...pos)),
                   a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
                   b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
@@ -784,5 +753,5 @@ window.onload = function() {
     state = STATE.PLAYING
     scheduler = new Scheduler()
     scheduler.setInterval(clock, 1000)
-    this.newLevel(1)
+    newLevel(1)
 }
