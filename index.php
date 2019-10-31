@@ -14,7 +14,7 @@
     function addButton($action, $label) {
 ?>
         <div><?=$label?></div>
-        <button type='button' onclick='changeKey(this, "<?=$action?>")'>
+        <button type="button" onclick="changeKey(this, '<?=$action?>')">
             <script>getKey("<?=$action?>")</script>
         </button>
 <?php    }
@@ -29,7 +29,7 @@
 ?>
     </div>
     <div id="play">
-        <a href="webtris.html">JOUER</a>
+        <a href="webtris.php">JOUER</a>
     </div>
 </body>
 </html>

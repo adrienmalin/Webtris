@@ -10,9 +10,24 @@
 <body>
     <h1>WEBTRIS</h1>
     <div id="grid">
-        <table id="hold"><table>
-        <table id="matrix"><table>
-        <table id="next"><table>
+<?php
+    function echoTable($id, $rows, $columns) {
+        echo "        <table id='$id'>\n";
+        echo "            <tbody>\n";
+        for ($y = 0; $y < $rows; $y++) {
+            echo "                <tr>";
+            for ($x = 0; $x < $columns; $x++) {
+                echo "<td></td>";
+            }
+            echo "</tr>\n";
+        }
+        echo "            </tbody>\n";
+        echo "        </table>\n";
+    }
+    echoTable("hold", 6, 6);
+    echoTable("matrix", 24, 10);
+    echoTable("next", 24, 6);
+?>
         <table id="stats">
             <tbody>
                 <tr><td class="stat-label">SCORE</td><td class="stat-value" id="score">0</td></tr>

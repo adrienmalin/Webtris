@@ -206,12 +206,6 @@ class MinoesTable {
         this.columns = columns
         this.piece = null
         this.table = document.getElementById(id)
-        for (var y=0; y < rows; y++) {
-            var row = this.table.insertRow()
-            for (var x=0; x < columns; x++) {
-                row.insertCell()
-            }
-        }
     }
 
     drawMino(x, y, className) {
@@ -224,8 +218,8 @@ class MinoesTable {
     }
 
     clearTable() {
-        for(var y=0; y < this.rows; y++) {
-            for (var x=0; x < this.columns; x++) {
+        for(var y = 0; y < this.rows; y++) {
+            for (var x = 0; x < this.columns; x++) {
                 this.drawMino(x, y, INVISIBLE_ROW_CLASS)
             }
         }
@@ -268,8 +262,8 @@ class Matrix extends MinoesTable {
     draw() {
         // grid
         if (state == STATE.PAUSED) {
-            for (var y=0; y < this.rows; y++) {
-                for (var x=0; x < this.columns; x++) {
+            for (var y = 0; y < this.rows; y++) {
+                for (var x = 0; x < this.columns; x++) {
                     if (this.clearedLines.includes(y)) var className = CLEARED_LINE_CLASS
                     else {
                         if (y < MATRIX_INVISIBLE_ROWS) var className = INVISIBLE_ROW_CLASS
@@ -279,8 +273,8 @@ class Matrix extends MinoesTable {
                 }
             }
         } else {
-            for (var y=0; y < this.rows; y++) {
-                for (var x=0; x < this.columns; x++) {
+            for (var y = 0; y < this.rows; y++) {
+                for (var x = 0; x < this.columns; x++) {
                     var className = this.lockedMinoes[y][x]
                     if (!className) {
                         if (this.clearedLines.includes(y)) className = CLEARED_LINE_CLASS
@@ -296,7 +290,7 @@ class Matrix extends MinoesTable {
             // trail
             if (this.trail.height) {
                 this.trail.minoesPos.forEach(pos => {
-                    for (var dy=0; dy < this.trail.height; dy++) this.drawMino(pos[0], pos[1]+dy, TRAIL_CLASS)
+                    for (var dy = 0; dy < this.trail.height; dy++) this.drawMino(pos[0], pos[1]+dy, TRAIL_CLASS)
                 })
             }
             
@@ -618,7 +612,7 @@ function hardDrop() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos)
-    for (matrix.trail.height=0; move(MOVEMENT.DOWN); matrix.trail.height++) {
+    for (matrix.trail.height = 0; move(MOVEMENT.DOWN); matrix.trail.height++) {
         stats.score += 2
     }
     while (move(MOVEMENT.DOWN)) {}
