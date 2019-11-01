@@ -5,11 +5,11 @@
     <title>Webtris</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/options.js"></script>
 </head>
 <body>
     <h1>WEBTRIS</h1>
-    <div id="actions">
+    <div id="settings">
 <?php
     function addButton($action, $label) {
 ?>

@@ -6,14 +6,14 @@
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());
         }
-        $query = $db->prepare('SELECT player, score FROM `leaderboard` ORDER BY score DESC LIMIT 10;');
-        $entryScore = $query->fetch();
-        $query->closeCursor();
+        $entryScore = (int) $db->query('SELECT score FROM `leaderboard` ORDER BY score DESC LIMIT 9, 1;')->fetch()['score'];
         $score = (int) $_POST['score'];
         if ($score > $entryScore)
             echo "true";
         else
             echo "false";
+        $query->closeCursor();
+        $db->close();
     } else {
         header($_SERVER["SERVER_PROTOCOL"] . " 405 Method Not Allowed", true, 405);
     }

@@ -9,7 +9,7 @@
 </head>
 <body>
     <h1>WEBTRIS</h1>
-    <div id="container">
+    <div id="grid-container">
 <?php
     function echoTable($id, $rows, $columns) {
         echo "        <table id='$id'>\n";
@@ -36,11 +36,17 @@
         </table>
         <div id="message"></div>
     </div>
-    <div id="button-link">
-        <a href="options.php" target="_blank">OPTIONS</a>
-    </div>
-    <div id="button-link">
-        <a href="index.php">REJOUER</a>
+    <!- settings ->
+    <div class="flex-container">
+        <div id="button-link">
+            <a href="options.php" target="_blank">OPTIONS</a>
+        </div>
+        <div id="button-link">
+            <a href="leaderboard.php" target="_blank">TABLEAU DE SCORES</a>
+        </div>
+        <div id="button-link">
+            <a href="index.php">REJOUER</a>
+        </div>
     </div>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
     <head>
         <meta charset="utf-8" />
-        <title>Webtris</title>
+        <title>Meilleurs scores - Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
         <link rel="stylesheet" type="text/css" href="css/style.css" />
     </head>
@@ -22,7 +22,16 @@
         echo '          <tr><th class="name">' . $i . '<td class="player">' . $row['player'] . '</td><td class="value">' . $row['score'] . "</td></tr>\n";
     }
     $top10->closeCursor();
+    $db->close();
 ?>
         </table>
+        <div class="flex-container">
+            <div id="button-link">
+                <a href="options.php" target="_blank">OPTIONS</a>
+            </div>
+            <div id="button-link">
+                <a href="index.php">REJOUER</a>
+            </div>
+        </div>
     </body>
 </html>

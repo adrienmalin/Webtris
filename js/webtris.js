@@ -550,9 +550,9 @@ function gameOver() {
     if (stats.score == stats.highScore) {
         localStorage.setItem('highScore', stats.highScore)
         info += "\nBravo ! Vous avez battu votre précédent record."
-    } else
-        var info = `GAME OVER\nScore : ${stats.score}`
+    }
 
+    var retry = 0
     var XHR = new XMLHttpRequest()
     var FD  = new FormData()
     FD.append("score", stats.score)
@@ -561,32 +561,32 @@ function gameOver() {
             var player = prompt(info + "\nBravo ! Vous êtes dans le Top 10.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
             if (player.length) {
                 localStorage.setItem("player", player)
-                postScore(player, stats.score)
+                XHR = new XMLHttpRequest()
+                FD  = new FormData()
+                FD.append("player", player)
+                FD.append("score", stats.score)
+                XHR.addEventListener('load', function(event) {
+                    open("leaderboard.php")
+                })
+                XHR.addEventListener('error', function(event) {
+                    if (confirm('Erreur de connexion.\nRéessayer ?'))
+                        XHR.send(FD)
+                })
+                XHR.open('POST', 'publish.php')
+                XHR.send(FD)
             }
         } else {
-            alert(info)
+            retry++
+            if (retry < RETRIES)
+                XHR.send(FD)
+            else
+                alert(info)
         }
     })
     XHR.addEventListener('error', function(event) {
         alert(info)
     })
-    XHR.open('POST', 'intop10.php')
-    XHR.send(FD)
-}
-
-function postScore(player, score) {
-    var XHR = new XMLHttpRequest()
-    var FD  = new FormData()
-    FD.append("player", player)
-    FD.append("score", stats.score)
-    XHR.addEventListener('load', function(event) {
-        open("leaderboard.php")
-    })
-    XHR.addEventListener('error', function(event) {
-        if (confirm('Erreur de connexion.\nRéessayer ?'))
-            postScore(player, score)
-    })
-    XHR.open('POST', 'publish.php')
+    XHR.open('POST', 'inleaderboard.php')
     XHR.send(FD)
 }
 

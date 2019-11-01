@@ -53,7 +53,8 @@ a:active {
     border-style: inset;
 }
 
-#actions {
+#settings {
+    /*visibility: hidden;*/
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-gap: 2vmin;
@@ -62,13 +63,21 @@ a:active {
     justify-items: left;
 }
 
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 2vmin;
+}
+
 #button-link {
     text-align: center;
     font-weight: bold;
 	margin: 3vmin;
 }
 
-#container {
+#grid-container {
     position: relative;
     display: grid;
     width: 72vmin;
