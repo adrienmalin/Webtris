@@ -5,31 +5,42 @@
     <title>Webtris</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <script type="text/javascript" src="js/index.js"></script>
+    <script type="text/javascript" src="js/webtris.js"></script>
 </head>
 <body>
     <h1>WEBTRIS</h1>
-    <div id="actions">
+    <div id="container">
 <?php
-    function addButton($action, $label) {
+    function echoTable($id, $rows, $columns) {
+        echo "        <table id='$id'>\n";
+        for ($y = 0; $y < $rows; $y++) {
+            echo "            <tr>";
+            for ($x = 0; $x < $columns; $x++) {
+                echo "<td></td>";
+            }
+            echo "</tr>\n";
+        }
+        echo "        </table>\n";
+    }
+    echoTable("hold", 6, 6);
+    echoTable("matrix", 24, 10);
+    echoTable("next", 24, 6);
 ?>
-        <div><?=$label?></div>
-        <button type="button" onclick="changeKey(this, '<?=$action?>')">
-            <script>getKey("<?=$action?>")</script>
-        </button>
-<?php    }
-    addButton("moveLeft", "GAUCHE");
-    addButton("moveRight", "DROITE");
-    addButton("softDrop", "CHUTE LENTE");
-    addButton("hardDrop", "CHUTE RAPIDE");
-    addButton("rotateCW", "ROTATION HORAIRE");
-    addButton("rotateCCW", "ROTATE INVERSE");
-    addButton("hold", "GARDE");
-    addButton("pause", "PAUSE");
-?>
+        <table id="stats">
+            <tr><th class="name">SCORE</th><td class="value" id="score">0</td></tr>
+            <tr><th class="name">RECORD</th><td class="value" id="highScore">0</td></tr>
+            <tr><th class="name">TEMPS</th><td class="value" id="time">00:00</td></tr>
+            <tr><th class="name">NIVEAU</th><td class="value" id="level">0</td></tr>
+            <tr><th class="name">OBJECTIF</th><td class="value" id="goal">0</td></tr>
+            <tr><th class="name">LIGNES</th><td class="value" id="clearedLines">0</td></tr>
+        </table>
+        <div id="message"></div>
     </div>
-    <div id="play">
-        <a href="webtris.php">JOUER</a>
+    <div id="button-link">
+        <a href="options.php" target="_blank">OPTIONS</a>
+    </div>
+    <div id="button-link">
+        <a href="index.php">REJOUER</a>
     </div>
 </body>
 </html>

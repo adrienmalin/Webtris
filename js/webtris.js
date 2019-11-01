@@ -86,6 +86,7 @@ const actionsDefaultKeys = {
     hold: "c",
     pause: "Escape",
 }
+const RETRIES = 3
 var actions = {}
 
 
@@ -442,15 +443,10 @@ function fallingPhase() {
 }
 
 function lockPhase() {
-    if (!move(MOVEMENT.DOWN)) {
-        matrix.piece.locked = true
-        if (!scheduler.timeoutTasks.has(lockDown))
-            scheduler.setTimeout(lockDown, stats.lockDelay)
-        matrix.draw()
-    }
+    move(MOVEMENT.DOWN)
 }
 
-function move(movement, testMinoesPos=matrix.piece.minoesPos) {
+function move(movement, testMinoesPos=matrix.piece.minoesPos, hardDrop=false) {
     const testPos = matrix.piece.pos.add(movement)
     if (matrix.spaceToMove(testMinoesPos.translate(testPos))) {
         matrix.piece.pos = testPos
@@ -459,14 +455,21 @@ function move(movement, testMinoesPos=matrix.piece.minoesPos) {
             matrix.piece.rotatedLast = false
         if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos.add(MOVEMENT.DOWN))))
             fallingPhase()
-        else {
+        else if (!hardDrop) {
             matrix.piece.locked = true
             scheduler.clearTimeout(lockDown)
             scheduler.setTimeout(lockDown, stats.lockDelay)
         }
-        matrix.draw()
+        if (!hardDrop)
+            matrix.draw()
         return true
     } else {
+        if (movement == MOVEMENT.DOWN) {
+            matrix.piece.locked = true
+            if (!scheduler.timeoutTasks.has(lockDown))
+                scheduler.setTimeout(lockDown, stats.lockDelay)
+            matrix.draw()
+        }
         return false
     }
 }
@@ -489,9 +492,11 @@ function rotate(spin) {
 
 function lockDown(){
     scheduler.clearInterval(lockPhase)
-    if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS))
-        game_over()
-    else {
+    if (matrix.piece.minoesAbsPos.every(pos => pos[1] < MATRIX_INVISIBLE_ROWS)) {
+        matrix.piece.locked = false
+        matrix.draw()
+        gameOver()
+    } else {
         matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.shape)
 
         // T-Spin detection
@@ -541,10 +546,48 @@ function gameOver() {
     scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
 
+    var info = `GAME OVER\nScore : ${stats.score}`
     if (stats.score == stats.highScore) {
-        alert("Bravo !\nVous avez battu votre précédent record.")
         localStorage.setItem('highScore', stats.highScore)
-    }
+        info += "\nBravo ! Vous avez battu votre précédent record."
+    } else
+        var info = `GAME OVER\nScore : ${stats.score}`
+
+    var XHR = new XMLHttpRequest()
+    var FD  = new FormData()
+    FD.append("score", stats.score)
+    XHR.addEventListener('load', function(event) {
+        if (event.target.responseText == "true") {
+            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 10.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
+            if (player.length) {
+                localStorage.setItem("player", player)
+                postScore(player, stats.score)
+            }
+        } else {
+            alert(info)
+        }
+    })
+    XHR.addEventListener('error', function(event) {
+        alert(info)
+    })
+    XHR.open('POST', 'intop10.php')
+    XHR.send(FD)
+}
+
+function postScore(player, score) {
+    var XHR = new XMLHttpRequest()
+    var FD  = new FormData()
+    FD.append("player", player)
+    FD.append("score", stats.score)
+    XHR.addEventListener('load', function(event) {
+        open("leaderboard.php")
+    })
+    XHR.addEventListener('error', function(event) {
+        if (confirm('Erreur de connexion.\nRéessayer ?'))
+            postScore(player, score)
+    })
+    XHR.open('POST', 'publish.php')
+    XHR.send(FD)
 }
 
 function autorepeat() {
@@ -615,7 +658,8 @@ function hardDrop() {
     for (matrix.trail.height = 0; move(MOVEMENT.DOWN); matrix.trail.height++) {
         stats.score += 2
     }
-    while (move(MOVEMENT.DOWN)) {}
+    while (move(MOVEMENT.DOWN, matrix.piece.minoesPos, true)) {}
+    matrix.draw()
     lockDown()
     scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
 }
@@ -655,9 +699,9 @@ function pause() {
     scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
     scheduler.clearInterval(clock)
-    hold.draw()
+    holdQueue.draw()
     matrix.draw()
-    next.draw()
+    nextQueue.draw()
 }
 
 function resume() {
