@@ -655,10 +655,9 @@ function hardDrop() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos)
-    for (matrix.trail.height = 0; move(MOVEMENT.DOWN); matrix.trail.height++) {
+    for (matrix.trail.height = 0; move(MOVEMENT.DOWN, matrix.piece.minoesPos, true); matrix.trail.height++) {
         stats.score += 2
     }
-    while (move(MOVEMENT.DOWN, matrix.piece.minoesPos, true)) {}
     matrix.draw()
     lockDown()
     scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
