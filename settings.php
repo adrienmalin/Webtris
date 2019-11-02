@@ -5,7 +5,7 @@
     <title>Webtris</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <script type="text/javascript" src="js/options.js"></script>
+    <script type="text/javascript" src="js/settings.js"></script>
 </head>
 <body>
     <h1>WEBTRIS</h1>

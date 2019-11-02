@@ -17,9 +17,10 @@
     } catch (Exception $e) {
         die('Erreur : ' . $e->getMessage());
     }
-    $top10 = $db->query('SELECT player, score FROM `leaderboard` ORDER BY score DESC LIMIT 10;');
+    $top10 = $db->query('SELECT player, score FROM `leaderboard` ORDER BY score DESC LIMIT 20;');
     for ($i = 1; $row = $top10->fetch(); $i++) {
-        echo '          <tr><th class="name">' . $i . '<td class="player">' . $row['player'] . '</td><td class="value">' . $row['score'] . "</td></tr>\n";
+        $score = number_format($row['score'], 0, ",", " ");
+        echo '          <tr><th class="name">' . $i . '<td class="player">' . $row['player'] . '</td><td class="value">' . $score . "</td></tr>\n";
     }
     $top10->closeCursor();
     $db->close();
@@ -27,7 +28,7 @@
         </table>
         <div class="flex-container">
             <div id="button-link">
-                <a href="options.php" target="_blank">OPTIONS</a>
+                <a href="settings.php" target="_blank">OPTIONS</a>
             </div>
             <div id="button-link">
                 <a href="index.php">REJOUER</a>

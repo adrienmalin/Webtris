@@ -17,10 +17,12 @@
 * {
     color: white;
     font-family: 'Share Tech';
-    font-size: 3vmin;
+    font-size: 1em;
+    margin: auto 1vmin;
 }
 
 body {
+    background-color: #0D111D;
     background-image: url("images/bg.jpg");
     background-size: cover;
     background-attachment: fixed;
@@ -28,65 +30,73 @@ body {
 
 h1 {
     font-size: 5vmin;
-    margin: 2vmin;
+    margin: 2vmin 5vmin 5vmin 5vmin;
     text-shadow: 3px 2px rgba(153, 145, 175, 0.5);
     text-align: center;
 }
 
+div {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-content: center;
+    margin: 2vmin;
+    text-align: center;
+    column-gap: 1vmin;
+}
+
+div * {
+    margin: auto 1vmin;
+}
+
+fieldset {
+    display: grid;
+    grid-template-columns: 24vmin 18vmin 24vmin 18vmin;
+    grid-gap: 1vmin;
+    margin: 2vmin auto;
+    width: 85vmin;
+    justify-items: right;
+    align-items: baseline;
+}
+
+label {
+    font-size: 1em;
+}
+
+input[type="number"] {
+    color: black;
+    width: 2.5em;
+}
+
+fieldset > input {
+    width: 100%;
+}
+
 button {
     color: black;
-    width: 100%;
+    margin: 0.5vmin;
 }
 
 a {
     text-decoration: none;
     font-size: 1em;
-    border-style: outset;
-    border-width: 2px;
-    border-radius: 3px;
-    color: black;
-    background-color: white;
-    padding: 5px;
 }
 
-a:active {
-    border-style: inset;
+a:hover {
+    color: lightcyan;
 }
 
-#settings {
-    /*visibility: hidden;*/
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-gap: 2vmin;
-    margin: 4vmin auto;
-    width: 100vmin;
-    justify-items: left;
-}
-
-.flex-container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin: 2vmin;
-}
-
-#button-link {
-    text-align: center;
-    font-weight: bold;
-	margin: 3vmin;
-}
-
-#grid-container {
+#game {
     position: relative;
-    display: grid;
+    display: none;
     width: 72vmin;
     grid-template-columns: 18vmin 30vmin 18vmin;
     grid-gap: 3vmin;
     margin: auto;
 }
 
-table {
+.minoes-table {
     table-layout: fixed;
     border-spacing: 0;
 }
@@ -96,13 +106,14 @@ th {
 }
 
 th, td {
-    border: 1px solid transparent;
     padding: 0;
-	border-style: outset;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
 }
 
 #hold {
-	grid-column: 1;
+    grid-column: 1;
     grid-row: 1;
     width: 18vmin;
     height: 18vmin;
@@ -123,6 +134,66 @@ th, td {
     height: 72vmin;
 }
 
+.invisible-grid > .empty-cell {
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.visible-grid > .empty-cell {
+    background: transparent;
+    border: 1px inset rgba(128, 128, 128, 0.3);
+}
+
+.mino {
+    border: 1px outset white;
+}
+
+.I-mino {
+    background: rgb(153, 255, 230);
+}
+
+.J-mino {
+    background: rgb(153, 204, 255);
+}
+
+.L-mino {
+    background: rgb(255, 204, 153);
+}
+
+.O-mino {
+    background: rgb(255, 255, 153);
+}
+
+.S-mino {
+    background: rgb(153, 255, 153);
+}
+
+.T-mino {
+    background: rgb(204, 153, 255);
+}
+
+.Z-mino {
+    background: rgb(255, 153, 153);
+}
+
+.locked-mino {
+    background: white;
+}
+
+.cleared-line {
+    background: white;
+}
+
+.trail {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.ghost {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 #stats {
     grid-column: 1;
     grid-row: 2;
@@ -138,6 +209,13 @@ th, td {
     color: white;
 }
 
+.player {
+    font-family: 'Share Tech';
+    text-align: center;
+    font-size: 2.5vmin;
+    color: white;
+}
+
 .value {
     font-family: 'Share Tech Mono';
     text-align: right;
@@ -145,71 +223,8 @@ th, td {
     color: white;
 }
 
-.invisible-row {
-    background-color: transparent;
-    border-color: transparent;
-}
-
-.visible-row {
-    background-color: transparent;
-    border-color: rgba(128, 128, 128, 0.3);
-    border-style: inset;
-}
-
-.tetromino-I {
-    background-color: rgb(153, 255, 230);
-    border-color: white;
-}
-
-.tetromino-J {
-    background-color: rgb(153, 204, 255);
-    border-color: white;
-}
-
-.tetromino-L {
-    background-color: rgb(255, 204, 153);
-    border-color: white;
-}
-
-.tetromino-O {
-    background-color: rgb(255, 255, 153);
-    border-color: white;
-}
-
-.tetromino-S {
-    background-color: rgb(153, 255, 153);
-    border-color: white;
-}
-
-.tetromino-T {
-    background-color: rgb(204, 153, 255);
-    border-color: white;
-}
-
-.tetromino-Z {
-    background-color: rgb(255, 153, 153);
-    border-color: white;
-}
-
-.locked-piece {
-    background-color: white;
-    border-color: white;
-}
-
-.cleared-line {
-    background-color: white;
-    border-color: white;
-}
-
-.trail {
-    background-color: rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.4);
-}
-
-.ghost {
-    background-color: rgba(255, 255, 255, 0.4);
-    border-color: rgba(255, 255, 255, 0.2);
-    border-style: solid;
+#score {
+    font-weight: bold;
 }
 
 #message {
@@ -217,11 +232,23 @@ th, td {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: white;
-    font-size: 3vmin;
-    text-shadow: 1px 1px black;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 4vmin;
+    text-shadow: 1px 1px rgba(0, 0, 0, 0.8);
     text-align: center;
     font-weight: bold;
+}
+
+#settings {
+    display: none;
+}
+
+#settings > label {
+    margin: auto auto auto 0;
+}
+
+#keyboard button {
+    width: 100%;
 }
 
 #leaderboard {
@@ -230,11 +257,4 @@ th, td {
     text-align: center;
     border-top: 1px solid white;
     caption-side: top;
-}
-
-.player {
-    font-family: 'Share Tech';
-    text-align: center;
-    font-size: 2.5vmin;
-    color: white;
 }

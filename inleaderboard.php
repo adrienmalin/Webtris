@@ -6,8 +6,8 @@
         } catch (Exception $e) {
             die('Erreur : ' . $e->getMessage());
         }
-        $entryScore = (int) $db->query('SELECT score FROM `leaderboard` ORDER BY score DESC LIMIT 9, 1;')->fetch()['score'];
         $score = (int) $_POST['score'];
+        $entryScore = (int) $db->query('SELECT score FROM `leaderboard` ORDER BY score DESC LIMIT 19, 1;')->fetch()['score'];
         if ($score > $entryScore)
             echo "true";
         else

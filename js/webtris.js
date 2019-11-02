@@ -1,24 +1,19 @@
-Array.prototype.add = function(other) {
-    return this.map((x, i) => x + other[i])
-}
+// Customize Array to be use as coordinates
+Object.defineProperty(Array.prototype, "x", {
+    get: function () { return this[0] },
+    set: function (x) { this[0] = x}
+})
+Object.defineProperty(Array.prototype, "y", {
+    get: function () { return this[1] },
+    set: function (y) { this[1] = y}
+})
+Array.prototype.add =       function(other)  { return this.map((x, i) => x + other[i]) }
+Array.prototype.mul =       function(k)      { return this.map(x => k * x) }
+Array.prototype.translate = function(vector) { return this.map(pos => pos.add(vector)) }
+Array.prototype.rotate =    function(spin)   { return [-spin*this.y, spin*this.x] }
+Array.prototype.pick =      function()       { return this.splice(Math.floor(Math.random()*this.length), 1)[0] }
 
-Array.prototype.mul = function(k) {
-    return this.map(x => k * x)
-}
-
-Array.prototype.translate = function(vector) {
-    return this.map(pos => pos.add(vector))
-}
-
-Array.prototype.rotate = function(spin) {
-    return [-spin*this[1], spin*this[0]]
-}
-
-Array.prototype.pick = function() {
-    return this.splice(Math.floor(Math.random()*this.length), 1)[0]
-}
-
-
+// Constants
 const NEXT_PIECES =     6
 const HOLD_ROWS =       6
 const HOLD_COLUMNS =    6
@@ -27,18 +22,18 @@ const MATRIX_INVISIBLE_ROWS = 4
 const MATRIX_COLUMNS = 10
 const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
-const LOCKED_PIECE_CLASS = "locked-piece"
-const INVISIBLE_ROW_CLASS = "invisible-row"
-const VISIBLE_ROW_CLASS = "visible-row"
-const CLEARED_LINE_CLASS = "cleared-line"
+const EMPTY_CELL_CLASS = "empty-cell"
+const MINO_CLASS = "mino"
+const LOCKED_PIECE_CLASS = "locked-mino"
 const TRAIL_CLASS = "trail"
 const GHOST_CLASS = "ghost"
+const CLEARED_LINE_CLASS = "mino cleared-line"
 const HELD_PIECE_POSITION =    [2, 3]
 const FALLING_PIECE_POSITION = [4, 3]
 const NEXT_PIECES_POSITIONS =  Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
 const LOCK_DELAY =       500
 const FALL_PERIOD =     1000
-const AUTOREPEAT_DELAY = 200
+const AUTOREPEAT_DELAY = 300
 const AUTOREPEAT_PERIOD = 10
 const ANIMATION_DELAY =  100
 const TEMP_TEXTS_DELAY = 700
@@ -72,6 +67,7 @@ const SCORES = [
 ]
 const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
 const STATE = {
+    WAITING: "WAITING",
     PLAYING: "PLAYING",
     PAUSED: "PAUSE",
     GAME_OVER: "GAME OVER"
@@ -87,9 +83,9 @@ const actionsDefaultKeys = {
     pause: "Escape",
 }
 const RETRIES = 3
-var actions = {}
 
 
+// Classes
 class Scheduler {
     constructor() {
         this.intervalTasks = new Map()
@@ -146,11 +142,11 @@ class Tetromino {
             this.shape = shape
         else {
             if (!randomBag.length)
-                randomBag = ['tetromino-I', 'tetromino-J', 'tetromino-L', 'tetromino-O', 'tetromino-S', 'tetromino-T', 'tetromino-Z']
+                randomBag = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
             this.shape = randomBag.pick()
         }
         switch(this.shape) {
-            case 'tetromino-I':
+            case 'I':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [2, 0]]
                 this.srs[SPIN.CW] = [
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
@@ -165,27 +161,28 @@ class Tetromino {
                     [[ 1,  0], [-1,  0], [ 2,  0], [-1,  1], [ 2, -2]],
                 ]
             break
-            case 'tetromino-J':
+            case 'J':
                 this.minoesPos = [[-1, -1], [-1, 0], [0, 0], [1, 0]]
             break
-            case 'tetromino-L':
+            case 'L':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [1, -1]]
             break
-            case 'tetromino-O':
+            case 'O':
                 this.minoesPos = [[0, 0], [1, 0], [0, -1], [1, -1]]
                 this.srs[SPIN.CW] = [[]]
                 this.srs[SPIN.CCW] = [[]]
             break
-            case 'tetromino-S':
+            case 'S':
                 this.minoesPos = [[-1, 0], [0, 0], [0, -1], [1, -1]]
             break
-            case 'tetromino-T':
+            case 'T':
                 this.minoesPos = [[-1, 0], [0, 0], [1, 0], [0, -1]]
             break
-            case 'tetromino-Z':
+            case 'Z':
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
             break
         }
+        this.className = MINO_CLASS + " " + this.shape + "-" + MINO_CLASS
     }
         
     get minoesAbsPos() {
@@ -195,7 +192,7 @@ class Tetromino {
     get ghost() {
         var ghost = new Tetromino(Array.from(this.pos), this.shape)
         ghost.minoesPos = Array.from(this.minoesPos)
-        ghost.shape = GHOST_CLASS
+        ghost.className = GHOST_CLASS
         return ghost
     }
 }
@@ -214,14 +211,14 @@ class MinoesTable {
     }
 
     drawPiece(piece) {
-        var className = piece.locked ? LOCKED_PIECE_CLASS : piece.shape
+        var className = piece.locked ? LOCKED_PIECE_CLASS + " "+ piece.className: piece.className
         piece.minoesAbsPos.forEach(pos => this.drawMino(...pos, className))
     }
 
     clearTable() {
         for(var y = 0; y < this.rows; y++) {
             for (var x = 0; x < this.columns; x++) {
-                this.drawMino(x, y, INVISIBLE_ROW_CLASS)
+                this.drawMino(x, y, EMPTY_CELL_CLASS)
             }
         }
     }
@@ -263,26 +260,16 @@ class Matrix extends MinoesTable {
     draw() {
         // grid
         if (state == STATE.PAUSED) {
-            for (var y = 0; y < this.rows; y++) {
-                for (var x = 0; x < this.columns; x++) {
-                    if (this.clearedLines.includes(y)) var className = CLEARED_LINE_CLASS
-                    else {
-                        if (y < MATRIX_INVISIBLE_ROWS) var className = INVISIBLE_ROW_CLASS
-                        else var className = VISIBLE_ROW_CLASS
-                    }
-                    this.drawMino(x, y, className)
-                }
-            }
+            this.clearTable()
         } else {
             for (var y = 0; y < this.rows; y++) {
                 for (var x = 0; x < this.columns; x++) {
                     var className = this.lockedMinoes[y][x]
                     if (!className) {
-                        if (this.clearedLines.includes(y)) className = CLEARED_LINE_CLASS
-                        else {
-                            if (y < MATRIX_INVISIBLE_ROWS) className = INVISIBLE_ROW_CLASS
-                            else className = VISIBLE_ROW_CLASS
-                        }
+                        if (this.clearedLines.includes(y))
+                            className = CLEARED_LINE_CLASS
+                        else
+                            className = EMPTY_CELL_CLASS
                     }
                     this.drawMino(x, y, className)
                 }
@@ -291,14 +278,15 @@ class Matrix extends MinoesTable {
             // trail
             if (this.trail.height) {
                 this.trail.minoesPos.forEach(pos => {
-                    for (var dy = 0; dy < this.trail.height; dy++) this.drawMino(pos[0], pos[1]+dy, TRAIL_CLASS)
+                    for (var y = pos.y; y < pos.y + this.trail.height; y++)
+                        this.drawMino(pos.x, y, TRAIL_CLASS)
                 })
             }
             
             //ghost
             if (!this.piece.locked && state != STATE.GAME_OVER) {
-                for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos[1]++) {}
-                ghost.pos[1]--
+                for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos.y++) {}
+                ghost.pos.y--
                 this.drawPiece(ghost)
             }
 
@@ -323,11 +311,6 @@ class NextQueue extends MinoesTable {
 }
 
 
-timeFormat = new Intl.DateTimeFormat("fr-FR", {
-    minute: "2-digit", second: "2-digit", hourCycle: "h24", timeZone: "UTC"
-}).format
-
-
 class Stats {
     constructor () {
         this.scoreCell = document.getElementById("score")
@@ -337,11 +320,11 @@ class Stats {
         this.goalCell = document.getElementById("goal")
         this.clearedLinesCell = document.getElementById("clearedLines")
         this._score = 0
-        this.highScore = localStorage.getItem('highScore') || 0
+        this.highScore = Number(localStorage.getItem('highScore'))
+        this.highScoreCell.innerHTML = this.highScore.toLocaleString()
         this.goal = 0
         this.clearedLines = 0
-        this.startTime = Date.now()
-        this.pauseTime = 0
+        this.time = 0
         this.combo = -1
         this.lockDelay = LOCK_DELAY
         this.fallPeriod = FALL_PERIOD
@@ -352,11 +335,13 @@ class Stats {
     }
 
     set score(score) {
-        this._score = score
-        this.scoreCell.innerHTML = this._score
-        if (score > this.highScore)
-            this.highScore = score
-            this.highScoreCell.innerHTML = this.highScore
+        if (score != NaN) {
+            this._score = score
+            this.scoreCell.innerHTML = this._score.toLocaleString()
+            if (score > this.highScore)
+                this.highScore = score
+                this.highScoreCell.innerHTML = this.highScore.toLocaleString()
+        }
     }
 
     newLevel(level=null) {
@@ -399,7 +384,8 @@ class Stats {
         if (this.combo >= 1)
             combo_score = (clearedLines == 1 ? 20 : 50) * this.combo * this.level
 
-        this.score += patternScore + combo_score
+        if (patternScore || combo_score)
+            this.score += patternScore + combo_score
 
         if (patternScore) {
             var messages = [patternName, patternScore]
@@ -408,12 +394,48 @@ class Stats {
                 printTempTexts(messages.join("<br/>"))
         }
     }
-
-    printTime() {
-        this.timeCell.innerHTML = timeFormat(Date.now() - this.startTime)
-    }
 }
 
+
+// Functions
+function start() {
+    document.getElementById("startButton").blur()
+    
+    var startLevel = document.getElementById("startLevel").value
+    localStorage.setItem("startLevel", startLevel)
+
+    document.getElementById("game").style.display = "grid"
+    document.getElementById("settings").style.display = "none"
+    document.getElementById("start").style.display = "none"
+    document.getElementById("settingsButton").style.display = "flex"
+    document.getElementById("leaderboardLink").style.display = "none"
+
+    state = STATE.PLAYING
+    pressedKeys = new Set()
+    actionsToRepeat = []
+    addEventListener("keydown", keyDownHandler, false)
+    addEventListener("keyup", keyUpHandler, false)
+    scheduler.setInterval(clock, 1000)
+    newLevel(startLevel)
+}
+
+function applySettings() {
+    actions[STATE.PLAYING] = {}
+    actions[STATE.PLAYING][getKeyName("moveLeft")] = moveLeft
+    actions[STATE.PLAYING][getKeyName("moveRight")] = moveRight
+    actions[STATE.PLAYING][getKeyName("softDrop")] = softDrop
+    actions[STATE.PLAYING][getKeyName("hardDrop")] = hardDrop
+    actions[STATE.PLAYING][getKeyName("rotateCW")] = rotateCW
+    actions[STATE.PLAYING][getKeyName("rotateCCW")] = rotateCCW
+    actions[STATE.PLAYING][getKeyName("hold")] = hold
+    actions[STATE.PLAYING][getKeyName("pause")] = pause
+    actions[STATE.PAUSED] = {}
+    actions[STATE.PAUSED][getKeyName("pause")] = resume
+    actions[STATE.GAME_OVER] = {}
+
+    autorepeatDelay = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
+    autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
+}
 
 function newLevel(startLevel) {
     stats.newLevel(startLevel)
@@ -492,16 +514,16 @@ function rotate(spin) {
 
 function lockDown(){
     scheduler.clearInterval(lockPhase)
-    if (matrix.piece.minoesAbsPos.every(pos => pos[1] < MATRIX_INVISIBLE_ROWS)) {
+    if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS)) {
         matrix.piece.locked = false
         matrix.draw()
         gameOver()
     } else {
-        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos[1]][pos[0]] = matrix.piece.shape)
+        matrix.piece.minoesAbsPos.forEach(pos => matrix.lockedMinoes[pos.y][pos.x] = matrix.piece.className)
 
         // T-Spin detection
         var tSpin = T_SPIN.NONE
-        if (matrix.piece.rotatedLast && matrix.piece.shape == "tetromino-T") {
+        if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
             const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(...pos)),
                   a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
                   b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
@@ -545,6 +567,8 @@ function gameOver() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
+    removeEventListener("keydown", keyDownHandler, false)
+    removeEventListener("keyup", keyUpHandler, false)
 
     var info = `GAME OVER\nScore : ${stats.score}`
     if (stats.score == stats.highScore) {
@@ -558,7 +582,7 @@ function gameOver() {
     FD.append("score", stats.score)
     XHR.addEventListener('load', function(event) {
         if (event.target.responseText == "true") {
-            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 10.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
+            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 20.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
             if (player.length) {
                 localStorage.setItem("player", player)
                 XHR = new XMLHttpRequest()
@@ -569,25 +593,34 @@ function gameOver() {
                     open("leaderboard.php")
                 })
                 XHR.addEventListener('error', function(event) {
-                    if (confirm('Erreur de connexion.\nRéessayer ?'))
+                    if (confirm('Erreur de connexion.\nRéessayer ?')) {
+                        XHR.open('POST', 'publish.php')
                         XHR.send(FD)
+                    }
                 })
                 XHR.open('POST', 'publish.php')
                 XHR.send(FD)
             }
         } else {
-            retry++
-            if (retry < RETRIES)
-                XHR.send(FD)
-            else
-                alert(info)
+            alert(info)
         }
     })
     XHR.addEventListener('error', function(event) {
-        alert(info)
+        retry++
+        if (retry < RETRIES) {
+            XHR.open('POST', 'inleaderboard.php')
+            XHR.send(FD)
+        } else
+            alert(info)
     })
     XHR.open('POST', 'inleaderboard.php')
     XHR.send(FD)
+
+    document.getElementById("game").style.display = "none"
+    document.getElementById("settings").style.display = "none"
+    document.getElementById("start").style.display = "flex"
+    document.getElementById("settingsButton").style.display = "flex"
+    document.getElementById("leaderboardLink").style.display = "flex"
 }
 
 function autorepeat() {
@@ -595,7 +628,7 @@ function autorepeat() {
         actionsToRepeat[0]()
         if (scheduler.timeoutTasks.has(autorepeat)) {
             scheduler.clearTimeout(autorepeat)
-            scheduler.setInterval(autorepeat, AUTOREPEAT_PERIOD)
+            scheduler.setInterval(autorepeat, autorepeatPeriod)
         }
     } else {
         scheduler.clearTimeout(autorepeat)
@@ -618,7 +651,7 @@ function keyDownHandler(e) {
                 if (action == softDrop)
                     scheduler.setInterval(autorepeat, stats.fallPeriod / 20)
                 else
-                    scheduler.setTimeout(autorepeat, AUTOREPEAT_DELAY)
+                    scheduler.setTimeout(autorepeat, autorepeatDelay)
             }
         }
     }
@@ -655,9 +688,8 @@ function hardDrop() {
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     matrix.trail.minoesPos = Array.from(matrix.piece.minoesAbsPos)
-    for (matrix.trail.height = 0; move(MOVEMENT.DOWN, matrix.piece.minoesPos, true); matrix.trail.height++) {
-        stats.score += 2
-    }
+    for (matrix.trail.height = 0; move(MOVEMENT.DOWN, matrix.piece.minoesPos, true); matrix.trail.height++) {}
+    stats.score += 2 * matrix.trail.height
     matrix.draw()
     lockDown()
     scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
@@ -692,8 +724,7 @@ function hold() {
 
 function pause() {
     state = STATE.PAUSED
-    stats.pauseTime = Date.now() - stats.startTime
-    messageDiv.innerHTML = "PAUSED"
+    actionsToRepeat = []
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
@@ -701,23 +732,23 @@ function pause() {
     holdQueue.draw()
     matrix.draw()
     nextQueue.draw()
+    messageDiv.innerHTML = `PAUSE<br/><br/>Appuyez sur<br/>${getKeyName('pause')}<br/>pour reprendre`
 }
 
 function resume() {
     state = STATE.PLAYING
-    stats.startTime = Date.now() - stats.pauseTime
     messageDiv.innerHTML = ""
     scheduler.setTimeout(lockPhase, stats.fallPeriod)
     if (matrix.piece.locked)
         scheduler.setTimeout(lockDown, stats.lockDelay)
     scheduler.setInterval(clock, 1000)
-    hold.draw()
+    holdQueue.draw()
     matrix.draw()
-    next.draw()
+    nextQueue.draw()
 }
 
-function printTempTexts(texts) {
-    tempTexts.push(texts)
+function printTempTexts(text) {
+    tempTexts.push(text)
     messageDiv.innerHTML = tempTexts[0]
     if (!scheduler.intervalTasks.has(delTempTexts))
         scheduler.setInterval(delTempTexts, TEMP_TEXTS_DELAY)
@@ -734,42 +765,119 @@ function delTempTexts(self) {
     }
 }
 
-function getKey(action) {
+function clock() {
+    stats.timeCell.innerHTML = timeFormat(1000 * ++stats.time)
+}
+
+function getKeyName(action) {
     return localStorage.getItem(action) || actionsDefaultKeys[action]
 }
 
-function clock() {
-    stats.printTime()
+function getKeyNameOrSpace(action) {
+    key = getKeyName(action)
+    return (key == " ") ? "Space" : key
 }
 
+// Settings functions
+function showSettings() {
+    document.getElementById("set-moveLeft-key").innerHTML = getKeyNameOrSpace("moveLeft")
+    document.getElementById("set-moveRight-key").innerHTML = getKeyNameOrSpace("moveRight")
+    document.getElementById("set-softDrop-key").innerHTML = getKeyNameOrSpace("softDrop")
+    document.getElementById("set-hardDrop-key").innerHTML = getKeyNameOrSpace("hardDrop")
+    document.getElementById("set-rotateCW-key").innerHTML = getKeyNameOrSpace("rotateCW")
+    document.getElementById("set-rotateCCW-key").innerHTML = getKeyNameOrSpace("rotateCCW")
+    document.getElementById("set-hold-key").innerHTML = getKeyNameOrSpace("hold")
+    document.getElementById("set-pause-key").innerHTML = getKeyNameOrSpace("pause")
+
+    document.getElementById("autorepeatDelayRange").value = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
+    document.getElementById("autorepeatPeriodRange").value = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
+    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+
+    if (state == STATE.PLAYING)
+        pause()
+    document.getElementById("settings").style.display = "flex"
+    document.getElementById("game").style.display = "none"
+    document.getElementById("start").style.display = "none"
+    document.getElementById("leaderboardLink").style.display = "none"
+    document.getElementById("settingsButton").style.display = "none"
+}
+
+function hideSettings() {
+    applySettings()
+    switch(state) {
+        case STATE.WAITING:
+        case STATE.GAME_OVER:
+            document.getElementById("game").style.display = "none"
+            document.getElementById("settings").style.display = "none"
+            document.getElementById("start").style.display = "flex"
+            document.getElementById("settingsButton").style.display = "flex"
+            document.getElementById("leaderboardLink").style.display = "flex"
+        break
+        case STATE.PAUSED:
+            document.getElementById("game").style.display = "grid"
+            document.getElementById("settings").style.display = "none"
+            document.getElementById("start").style.display = "none"
+            document.getElementById("settingsButton").style.display = "flex"
+            document.getElementById("leaderboardLink").style.display = "none"
+            resume()
+        break
+    }
+}
+
+function waitKey(button, action) {
+    button.innerHTML = "Touche ?"
+    selectedButton = button
+    selectedAction = action
+    button.blur()
+    addEventListener("keyup", changeKey, false)
+}
+
+function changeKey(e) {
+    if (selectedButton) {
+        localStorage.setItem(selectedAction, e.key)
+        selectedButton.innerHTML = (e.key == " ") ? "Space" : e.key
+        selectedButton = null
+    }
+    removeEventListener("keyup", changeKey, false)
+}
+
+function autorepeatDelayChanged() {
+    autorepeatDelay = document.getElementById("autorepeatDelayRange").value
+    localStorage.setItem("autorepeatDelay", autorepeatDelay)
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
+}
+
+function autorepeatPeriodChanged() {
+    autorepeatPeriod = document.getElementById("autorepeatPeriodRange").value
+    localStorage.setItem("autorepeatPeriod", autorepeatPeriod)
+    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+}
+
+//global variables
+timeFormat = new Intl.DateTimeFormat("fr-FR", {
+    minute: "2-digit",
+    second: "2-digit",
+    timeZone: "UTC"
+}).format
+state = STATE.WAITING
+tempTexts = []
+actions = {}
+selectedButton = null
+selectedAction = ""
+
 window.onload = function() {
-    tempTexts = []
+    applySettings()
+
+    document.getElementById("startLevel").value = localStorage.getItem("startLevel") || 1
+
+    document.getElementById("startButton").disabled = false
+    document.getElementById("settingsButton").disabled = false
     messageDiv = document.getElementById("message")
 
+    scheduler = new Scheduler()
     holdQueue = new HoldQueue()
     stats = new Stats()
     matrix = new Matrix()
     nextQueue = new NextQueue()
-    
-    actions[STATE.PLAYING] = {}
-    actions[STATE.PLAYING][getKey("moveLeft")] = moveLeft
-    actions[STATE.PLAYING][getKey("moveRight")] = moveRight
-    actions[STATE.PLAYING][getKey("softDrop")] = softDrop
-    actions[STATE.PLAYING][getKey("hardDrop")] = hardDrop
-    actions[STATE.PLAYING][getKey("rotateCW")] = rotateCW
-    actions[STATE.PLAYING][getKey("rotateCCW")] = rotateCCW
-    actions[STATE.PLAYING][getKey("hold")] = hold
-    actions[STATE.PLAYING][getKey("pause")] = pause
-    actions[STATE.PAUSED] = {}
-    actions[STATE.PAUSED][getKey("pause")] = resume
-    actions[STATE.GAME_OVER] = {}
-    pressedKeys = new Set()
-    actionsToRepeat = []
-    addEventListener("keydown", keyDownHandler, false)
-    addEventListener("keyup", keyUpHandler, false)
-
-    state = STATE.PLAYING
-    scheduler = new Scheduler()
-    scheduler.setInterval(clock, 1000)
-    newLevel(1)
 }

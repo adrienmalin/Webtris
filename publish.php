@@ -7,12 +7,15 @@
             die('Erreur : ' . $e->getMessage());
         }
         $query = $db->prepare('INSERT INTO `leaderboard` (`player`, `score`) VALUES (:player, :score);');
-        $query->execute(array("player" => strip_tags($_POST['player']), "score" => (int) $_POST['score']));
+        $query->execute(array(
+            "player" => strip_tags($_POST['player']),
+            "score" => (int) $_POST['score']
+        ));
 
-        $RowsToDelete = $db->query('SELECT id FROM `leaderboard` ORDER BY score DESC LIMIT 10, 10;');
+        $RowsToDelete = $db->query('SELECT id FROM `leaderboard` ORDER BY score DESC LIMIT 20, 1000;');
         while($row = $RowsToDelete->fetch()) {
             $id = $row['id'];
-            $db->query("DELETE FROM `leaderboard` WHERE id=" . $row['id'] . ";");
+            $db->exec("DELETE FROM `leaderboard` WHERE id=" . $row['id'] . ";");
         }
         $row->closeCursor();
         $db->close();
