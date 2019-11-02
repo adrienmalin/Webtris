@@ -284,7 +284,7 @@ class Matrix extends MinoesTable {
             }
             
             //ghost
-            if (!this.piece.locked && state != STATE.GAME_OVER) {
+            if (showGhost && !this.piece.locked && state != STATE.GAME_OVER) {
                 for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos.y++) {}
                 ghost.pos.y--
                 this.drawPiece(ghost)
@@ -417,24 +417,6 @@ function start() {
     addEventListener("keyup", keyUpHandler, false)
     scheduler.setInterval(clock, 1000)
     newLevel(startLevel)
-}
-
-function applySettings() {
-    actions[STATE.PLAYING] = {}
-    actions[STATE.PLAYING][getKeyName("moveLeft")] = moveLeft
-    actions[STATE.PLAYING][getKeyName("moveRight")] = moveRight
-    actions[STATE.PLAYING][getKeyName("softDrop")] = softDrop
-    actions[STATE.PLAYING][getKeyName("hardDrop")] = hardDrop
-    actions[STATE.PLAYING][getKeyName("rotateCW")] = rotateCW
-    actions[STATE.PLAYING][getKeyName("rotateCCW")] = rotateCCW
-    actions[STATE.PLAYING][getKeyName("hold")] = hold
-    actions[STATE.PLAYING][getKeyName("pause")] = pause
-    actions[STATE.PAUSED] = {}
-    actions[STATE.PAUSED][getKeyName("pause")] = resume
-    actions[STATE.GAME_OVER] = {}
-
-    autorepeatDelay = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
-    autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
 }
 
 function newLevel(startLevel) {
@@ -773,30 +755,56 @@ function getKeyName(action) {
     return localStorage.getItem(action) || actionsDefaultKeys[action]
 }
 
-function getKeyNameOrSpace(action) {
-    key = getKeyName(action)
+// Settings functions
+function applySettings() {
+    actions[STATE.PLAYING] = {}
+    actions[STATE.PLAYING][getKeyName("moveLeft")] = moveLeft
+    actions[STATE.PLAYING][getKeyName("moveRight")] = moveRight
+    actions[STATE.PLAYING][getKeyName("softDrop")] = softDrop
+    actions[STATE.PLAYING][getKeyName("hardDrop")] = hardDrop
+    actions[STATE.PLAYING][getKeyName("rotateCW")] = rotateCW
+    actions[STATE.PLAYING][getKeyName("rotateCCW")] = rotateCCW
+    actions[STATE.PLAYING][getKeyName("hold")] = hold
+    actions[STATE.PLAYING][getKeyName("pause")] = pause
+    actions[STATE.PAUSED] = {}
+    actions[STATE.PAUSED][getKeyName("pause")] = resume
+    actions[STATE.GAME_OVER] = {}
+
+    autorepeatDelay = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
+    autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
+
+    showGhost = localStorage.getItem("showGhost")
+    if (showGhost)
+        showGhost = (showGhost == "true")
+    else
+    showGhost = true
+}
+
+function replaceSpace(key) {
     return (key == " ") ? "Space" : key
 }
 
-// Settings functions
 function showSettings() {
-    document.getElementById("set-moveLeft-key").innerHTML = getKeyNameOrSpace("moveLeft")
-    document.getElementById("set-moveRight-key").innerHTML = getKeyNameOrSpace("moveRight")
-    document.getElementById("set-softDrop-key").innerHTML = getKeyNameOrSpace("softDrop")
-    document.getElementById("set-hardDrop-key").innerHTML = getKeyNameOrSpace("hardDrop")
-    document.getElementById("set-rotateCW-key").innerHTML = getKeyNameOrSpace("rotateCW")
-    document.getElementById("set-rotateCCW-key").innerHTML = getKeyNameOrSpace("rotateCCW")
-    document.getElementById("set-hold-key").innerHTML = getKeyNameOrSpace("hold")
-    document.getElementById("set-pause-key").innerHTML = getKeyNameOrSpace("pause")
-
-    document.getElementById("autorepeatDelayRange").value = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
-    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
-    document.getElementById("autorepeatPeriodRange").value = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
-    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
-
     if (state == STATE.PLAYING)
         pause()
-    document.getElementById("settings").style.display = "flex"
+
+    document.getElementById("set-moveLeft-key").innerHTML = replaceSpace(getKeyName("moveLeft"))
+    document.getElementById("set-moveRight-key").innerHTML = replaceSpace(getKeyName("moveRight"))
+    document.getElementById("set-softDrop-key").innerHTML = replaceSpace(getKeyName("softDrop"))
+    document.getElementById("set-hardDrop-key").innerHTML = replaceSpace(getKeyName("hardDrop"))
+    document.getElementById("set-rotateCW-key").innerHTML = replaceSpace(getKeyName("rotateCW"))
+    document.getElementById("set-rotateCCW-key").innerHTML = replaceSpace(getKeyName("rotateCCW"))
+    document.getElementById("set-hold-key").innerHTML = replaceSpace(getKeyName("hold"))
+    document.getElementById("set-pause-key").innerHTML = replaceSpace(getKeyName("pause"))
+
+    document.getElementById("autorepeatDelayRange").value = autorepeatDelay
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
+    document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
+    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+
+    document.getElementById("showGhostCheckbox").checked = showGhost
+
+    document.getElementById("settings").style.display = "block"
     document.getElementById("game").style.display = "none"
     document.getElementById("start").style.display = "none"
     document.getElementById("leaderboardLink").style.display = "none"
@@ -854,7 +862,12 @@ function autorepeatPeriodChanged() {
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
 }
 
-//global variables
+function showGhostChanged() {
+    showGhost = (document.getElementById("showGhostCheckbox").checked == true)
+    localStorage.setItem("showGhost", showGhost)
+}
+
+// global variables
 timeFormat = new Intl.DateTimeFormat("fr-FR", {
     minute: "2-digit",
     second: "2-digit",

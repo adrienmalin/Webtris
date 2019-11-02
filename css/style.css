@@ -41,18 +41,18 @@ div {
     flex-wrap: wrap;
     justify-content: center;
     align-content: center;
-    margin: 2vmin;
+    margin: 4vmin;
     text-align: center;
     column-gap: 1vmin;
 }
 
 div * {
-    margin: auto 1vmin;
+    margin: auto 2vmin;
 }
 
 fieldset {
     display: grid;
-    grid-template-columns: 24vmin 18vmin 24vmin 18vmin;
+    grid-template-columns: 25vmin 17vmin 25vmin 17vmin;
     grid-gap: 1vmin;
     margin: 2vmin auto;
     width: 85vmin;
@@ -243,8 +243,17 @@ th, td {
     display: none;
 }
 
-#settings > label {
-    margin: auto auto auto 0;
+#settings > * {
+    margin: 2vmin auto;
+}
+
+#settings > div {
+    justify-content: left;
+    width: 85vmin;
+}
+
+#settings > div > * {
+    margin: 0;
 }
 
 #keyboard button {
