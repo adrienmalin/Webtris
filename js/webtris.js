@@ -14,32 +14,46 @@ Array.prototype.rotate =    function(spin)   { return [-spin*this.y, spin*this.x
 Array.prototype.pick =      function()       { return this.splice(Math.floor(Math.random()*this.length), 1)[0] }
 
 // Constants
-const NEXT_PIECES =     6
-const HOLD_ROWS =       6
-const HOLD_COLUMNS =    6
-const MATRIX_ROWS =    24
-const MATRIX_INVISIBLE_ROWS = 4
-const MATRIX_COLUMNS = 10
-const NEXT_ROWS =      24
-const NEXT_COLUMNS =    6
-const THEME_ROWS =      6
-const THEME_COLUMNS =   6
-const EMPTY_CELL_CLASS = "empty-cell"
-const MINO_CLASS = "mino"
-const LOCKED_PIECE_CLASS = "locked-mino"
-const TRAIL_CLASS = "trail"
-const GHOST_CLASS = "ghost"
-const CLEARED_LINE_CLASS = "mino cleared-line"
-const HELD_PIECE_POSITION =    [2, 3]
-const FALLING_PIECE_POSITION = [4, 3]
-const NEXT_PIECES_POSITIONS =  Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
-const THEME_PIECE_POSITION =   [2, 3]
-const LOCK_DELAY =       500
-const FALL_PERIOD =     1000
-const AUTOREPEAT_DELAY = 300
-const AUTOREPEAT_PERIOD = 10
-const ANIMATION_DELAY =  100
-const TEMP_TEXTS_DELAY = 700
+const NEXT_PIECES = 6
+const HOLD = {
+    ROWS: 6,
+    COLUMNS: 6
+}
+const MATRIX = {
+    ROWS: 24,
+    INVISIBLE_ROWS: 4,
+    COLUMNS: 10
+}
+const NEXT= {
+    ROWS: 24,
+    COLUMNS: 6
+}
+const THEME = {
+    ROWS: 6,
+    COLUMNS: 6
+}
+const CLASSNAME = {
+    EMPTY_CELL: "empty-cell",
+    MINO: "mino",
+    LOCKED: "locked-mino",
+    TRAIL: "trail",
+    GHOST: "ghost",
+    CLEARED_LINE: "mino cleared-line"
+}
+const POSITION = {
+    HELD_PIECE: [2, 3],
+    FALLING_PIECE: [4, 3],
+    NEXT_PIECES: Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3]),
+    THEMED_PIECE: [2, 3]
+}
+const DELAY = {
+    LOCK: 500,
+    FALL: 1000,
+    AUTOREPEAT_DELAY: 300,
+    AUTOREPEAT_PERIOD: 10,
+    ANIMATION: 100,
+    MESSAGE: 700
+}
 const MOVEMENT = {
     LEFT:  [-1, 0],
     RIGHT: [ 1, 0],
@@ -60,7 +74,11 @@ const T_SLOT = {
     C: 3,
     D: 2
 }
-const T_SLOT_POS = [[-1, -1], [1, -1], [1, 1], [-1, 1]]
+const T_SLOT_POS = [
+    [-1, -1],
+    [1, -1],
+    [1, 1],[-1, 1]
+]
 const SCORES = [
     {linesClearedName: "",       "": 0, "MINI\nT-SPIN": 1, "T-SPIN": 4},
     {linesClearedName: "SINGLE", "": 1, "MINI\nT-SPIN": 2, "T-SPIN": 8},
@@ -186,7 +204,7 @@ class Tetromino {
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
             break
         }
-        this.className = MINO_CLASS + " " + this.shape + "-" + MINO_CLASS
+        this.className = CLASSNAME.MINO + " " + this.shape + "-" + CLASSNAME.MINO
     }
         
     get minoesAbsPos() {
@@ -196,7 +214,7 @@ class Tetromino {
     get ghost() {
         var ghost = new Tetromino(Array.from(this.pos), this.shape)
         ghost.minoesPos = Array.from(this.minoesPos)
-        ghost.className = GHOST_CLASS
+        ghost.className = CLASSNAME.GHOST
         return ghost
     }
 }
@@ -213,15 +231,14 @@ class MinoesTable {
         this.table.rows[y].cells[x].className = className
     }
 
-    drawPiece(piece) {
-        var className = piece.locked ? LOCKED_PIECE_CLASS + " "+ piece.className: piece.className
+    drawPiece(piece=this.piece, className=piece.locked ? CLASSNAME.LOCKED + " "+ piece.className: piece.className) {
         piece.minoesAbsPos.forEach(pos => this.drawMino(...pos, className))
     }
 
     clearTable() {
         for(var y = 0; y < this.rows; y++) {
             for (var x = 0; x < this.columns; x++) {
-                this.drawMino(x, y, EMPTY_CELL_CLASS)
+                this.drawMino(x, y, CLASSNAME.EMPTY_CELL)
             }
         }
     }
@@ -229,7 +246,7 @@ class MinoesTable {
 
 class HoldQueue extends MinoesTable {
     constructor() {
-        super("hold", HOLD_ROWS, HOLD_COLUMNS)
+        super("hold", HOLD.ROWS, HOLD.COLUMNS)
     }
 
     newGame() {
@@ -246,11 +263,11 @@ class HoldQueue extends MinoesTable {
 
 class Matrix extends MinoesTable {
     constructor() {
-        super("matrix", MATRIX_ROWS, MATRIX_COLUMNS)
+        super("matrix", MATRIX.ROWS, MATRIX.COLUMNS)
     }
 
     newGame() {
-        this.lockedMinoes = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
+        this.lockedMinoes = Array.from(Array(MATRIX.ROWS+3), row => Array(MATRIX.COLUMNS))
         this.piece = null
         this.clearedLines = []
         this.trail = {
@@ -260,7 +277,7 @@ class Matrix extends MinoesTable {
     }
     
     cellIsOccupied(x, y) {
-        return 0 <= x && x < MATRIX_COLUMNS && y < MATRIX_ROWS ? this.lockedMinoes[y][x] : true
+        return 0 <= x && x < MATRIX.COLUMNS && y < MATRIX.ROWS ? this.lockedMinoes[y][x] : true
     }
     
     spaceToMove(minoesAbsPos) {
@@ -277,9 +294,9 @@ class Matrix extends MinoesTable {
                     var className = this.lockedMinoes[y][x]
                     if (!className) {
                         if (this.clearedLines.includes(y))
-                            className = CLEARED_LINE_CLASS
+                            className = CLASSNAME.CLEARED_LINE
                         else
-                            className = EMPTY_CELL_CLASS
+                            className = CLASSNAME.EMPTY_CELL
                     }
                     this.drawMino(x, y, className)
                 }
@@ -289,7 +306,7 @@ class Matrix extends MinoesTable {
             if (this.trail.height) {
                 this.trail.minoesPos.forEach(pos => {
                     for (var y = pos.y; y < pos.y + this.trail.height; y++)
-                        this.drawMino(pos.x, y, TRAIL_CLASS)
+                        this.drawMino(pos.x, y, CLASSNAME.TRAIL)
                 })
             }
             
@@ -308,11 +325,11 @@ class Matrix extends MinoesTable {
 
 class NextQueue extends MinoesTable {
     constructor() {
-        super("next", NEXT_ROWS, NEXT_COLUMNS)
+        super("next", NEXT.ROWS, NEXT.COLUMNS)
     }
 
     newGame() {
-        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
+        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(POSITION.NEXT_PIECES[k]))
     }
 
     draw() {
@@ -326,8 +343,8 @@ class NextQueue extends MinoesTable {
 
 class ThemePreview extends MinoesTable {
     constructor() {
-        super("themePreview", THEME_ROWS, THEME_COLUMNS)
-        this.piece = new Tetromino(THEME_PIECE_POSITION, "T")
+        super("themePreview", THEME.ROWS, THEME.COLUMNS)
+        this.piece = new Tetromino(POSITION.THEMED_PIECE, "T")
     }
 }
 
@@ -353,8 +370,8 @@ class Stats {
         this.time = 0
         this.timeCell.innerText = timeFormat(0)
         this.combo = -1
-        this.lockDelay = LOCK_DELAY
-        this.fallPeriod = FALL_PERIOD
+        this.lockDelay = DELAY.LOCK
+        this.fallPeriod = DELAY.FALL
     }
 
     get score() {
@@ -460,10 +477,10 @@ function generationPhase(held_piece=null) {
     if (!held_piece) {
         matrix.piece = nextQueue.pieces.shift()
         nextQueue.pieces.push(new Tetromino())
-        nextQueue.pieces.forEach((piece, i) => piece.pos = NEXT_PIECES_POSITIONS[i])
+        nextQueue.pieces.forEach((piece, i) => piece.pos = POSITION.NEXT_PIECES[i])
     }
     nextQueue.draw()
-    matrix.piece.pos = FALLING_PIECE_POSITION
+    matrix.piece.pos = POSITION.FALLING_PIECE
     if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos))){
         scheduler.clearInterval(lockPhase)
         scheduler.setInterval(lockPhase, stats.fallPeriod)
@@ -528,7 +545,7 @@ function rotate(spin) {
 
 function lockDown(){
     scheduler.clearInterval(lockPhase)
-    if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX_INVISIBLE_ROWS)) {
+    if (matrix.piece.minoesAbsPos.every(pos => pos.y < MATRIX.INVISIBLE_ROWS)) {
         matrix.piece.locked = false
         matrix.draw()
         gameOver()
@@ -552,16 +569,16 @@ function lockDown(){
         // Complete lines
         matrix.clearedLines = []
         matrix.lockedMinoes.forEach((row, y) => {
-            if (row.filter(lockedMino => lockedMino.length).length == MATRIX_COLUMNS) {
+            if (row.filter(lockedMino => lockedMino.length).length == MATRIX.COLUMNS) {
                 matrix.lockedMinoes.splice(y, 1)
-                matrix.lockedMinoes.unshift(Array(MATRIX_COLUMNS))
+                matrix.lockedMinoes.unshift(Array(MATRIX.COLUMNS))
                 matrix.clearedLines.push(y)
             }
         })
 
         stats.lockDown(tSpin, matrix.clearedLines.length)
         matrix.draw()
-        scheduler.setTimeout(clearLinesCleared, ANIMATION_DELAY)
+        scheduler.setTimeout(clearLinesCleared, DELAY.ANIMATION)
 
         if (stats.goal <= 0)
             newLevel()
@@ -637,16 +654,16 @@ function gameOver() {
     document.getElementById("leaderboardLink").style.display = "flex"
 }
 
-function autorepeat() {
+function AUTOREPEAT_DELAY() {
     if (actionsToRepeat.length) {
         actionsToRepeat[0]()
-        if (scheduler.timeoutTasks.has(autorepeat)) {
-            scheduler.clearTimeout(autorepeat)
-            scheduler.setInterval(autorepeat, autorepeatPeriod)
+        if (scheduler.timeoutTasks.has(AUTOREPEAT_DELAY)) {
+            scheduler.clearTimeout(AUTOREPEAT_DELAY)
+            scheduler.setInterval(AUTOREPEAT_DELAY, autorepeatPeriod)
         }
     } else {
-        scheduler.clearTimeout(autorepeat)
-        scheduler.clearInterval(autorepeat)
+        scheduler.clearTimeout(AUTOREPEAT_DELAY)
+        scheduler.clearInterval(AUTOREPEAT_DELAY)
     }
 }
 
@@ -660,12 +677,12 @@ function keyDownHandler(e) {
             action()
             if (REPEATABLE_ACTIONS.includes(action)) {
                 actionsToRepeat.unshift(action)
-                scheduler.clearTimeout(autorepeat)
-                scheduler.clearInterval(autorepeat)
+                scheduler.clearTimeout(AUTOREPEAT_DELAY)
+                scheduler.clearInterval(AUTOREPEAT_DELAY)
                 if (action == softDrop)
-                    scheduler.setInterval(autorepeat, stats.fallPeriod / 20)
+                    scheduler.setInterval(AUTOREPEAT_DELAY, stats.fallPeriod / 20)
                 else
-                    scheduler.setTimeout(autorepeat, autorepeatDelay)
+                    scheduler.setTimeout(AUTOREPEAT_DELAY, autorepeatDelay)
             }
         }
     }
@@ -678,13 +695,14 @@ function keyUpHandler(e) {
         if (actionsToRepeat.includes(action)) {
             actionsToRepeat.splice(actionsToRepeat.indexOf(action), 1)
             if (!actionsToRepeat.length) {
-                scheduler.clearTimeout(autorepeat)
-                scheduler.clearInterval(autorepeat)
+                scheduler.clearTimeout(AUTOREPEAT_DELAY)
+                scheduler.clearInterval(AUTOREPEAT_DELAY)
             }
         }
     }
 }
 
+// actions
 function moveLeft() {
     move(MOVEMENT.LEFT);
 }
@@ -706,7 +724,7 @@ function hardDrop() {
     stats.score += 2 * matrix.trail.height
     matrix.draw()
     lockDown()
-    scheduler.setTimeout(clearTrail, ANIMATION_DELAY)
+    scheduler.setTimeout(clearTrail, DELAY.ANIMATION)
 }
 
 function clearTrail() {
@@ -728,7 +746,7 @@ function hold() {
         scheduler.clearInterval(lockDown)
         var shape = matrix.piece.shape
         matrix.piece = holdQueue.piece
-        holdQueue.piece = new Tetromino(HELD_PIECE_POSITION, shape)
+        holdQueue.piece = new Tetromino(POSITION.HELD_PIECE, shape)
         holdQueue.piece.holdEnabled = false
         holdQueue.draw()
         generationPhase(matrix.piece)
@@ -741,7 +759,7 @@ function pause() {
     actionsToRepeat = []
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
-    scheduler.clearTimeout(autorepeat)
+    scheduler.clearTimeout(AUTOREPEAT_DELAY)
     scheduler.clearInterval(clock)
     holdQueue.draw()
     matrix.draw()
@@ -765,7 +783,7 @@ function printTempTexts(text) {
     tempTexts.push(text)
     messageDiv.innerHTML = tempTexts[0]
     if (!scheduler.intervalTasks.has(delTempTexts))
-        scheduler.setInterval(delTempTexts, TEMP_TEXTS_DELAY)
+        scheduler.setInterval(delTempTexts, DELAY.MESSAGE)
 }
 
 function delTempTexts(self) {
@@ -802,8 +820,8 @@ function applySettings() {
     actions[STATE.PAUSED][getKeyName("pause")] = resume
     actions[STATE.GAME_OVER] = {}
 
-    autorepeatDelay = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
-    autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
+    autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.AUTOREPEAT_DELAY
+    autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || DELAY.AUTOREPEAT_PERIOD
 
     theme = localStorage.getItem("theme") || DEFAULT_THEME
     loadTheme()

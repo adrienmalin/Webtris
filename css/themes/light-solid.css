@@ -47,6 +47,7 @@
 
 .cleared-line {
     background: white;
+    transition: background 1s;
 }
 
 .trail {
