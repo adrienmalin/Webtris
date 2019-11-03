@@ -732,7 +732,7 @@ function pause() {
 function resume() {
     state = STATE.PLAYING
     messageDiv.innerHTML = ""
-    scheduler.setTimeout(lockPhase, stats.fallPeriod)
+    scheduler.setInterval(lockPhase, stats.fallPeriod)
     if (matrix.piece.locked)
         scheduler.setTimeout(lockDown, stats.lockDelay)
     scheduler.setInterval(clock, 1000)
