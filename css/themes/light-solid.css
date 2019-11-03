@@ -9,48 +9,40 @@
 }
 
 .mino {
-    border: 1px solid;
-    border-radius: 0;
+    border: 1px solid white;
+    border-radius: 0vmin;
 }
 
 .I-mino {
-    background: cyan;
-    border-color: lightcyan;
+    background: rgb(153, 255, 230);
 }
 
 .J-mino {
-    background: blue;
-    border-color: lightblue;
+    background: rgb(153, 204, 255);
 }
 
 .L-mino {
-    background: orange;
-    border-color: lightgoldenrodyellow;
+    background: rgb(255, 204, 153);
 }
 
 .O-mino {
-    background: yellow;
-    border-color: lightyellow;
+    background: rgb(255, 255, 153);
 }
 
 .S-mino {
-    background: green;
-    border-color: lightgreen;
+    background: rgb(153, 255, 153);
 }
 
 .T-mino {
-    background: magenta;
-    border-color: pink;
+    background: rgb(204, 153, 255);
 }
 
 .Z-mino {
-    background: red;
-    border-color: lightpink;
+    background: rgb(255, 153, 153);
 }
 
 .locked-mino {
     background: white;
-    border-color: white;
 }
 
 .cleared-line {

@@ -9,8 +9,8 @@
 }
 
 .mino {
-    border: 1px solid;
-    border-radius: 0;
+    border: 1px outset;
+    border-radius: 0vmin;
 }
 
 .I-mino {

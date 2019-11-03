@@ -51,7 +51,7 @@ fieldset {
     grid-template-columns: 25vmin 17vmin 25vmin 17vmin;
     grid-gap: 1vmin;
     margin: 2vmin auto;
-    width: 85vmin;
+    width: 80vmin;
     justify-items: right;
     align-items: baseline;
 }

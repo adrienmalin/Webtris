@@ -852,8 +852,14 @@ function hideSettings() {
     applySettings()
     switch(state) {
         case STATE.WAITING:
-        case STATE.GAME_OVER:
             document.getElementById("game").style.display = "none"
+            document.getElementById("settings").style.display = "none"
+            document.getElementById("start").style.display = "flex"
+            document.getElementById("settingsButton").style.display = "flex"
+            document.getElementById("leaderboardLink").style.display = "flex"
+        break
+        case STATE.GAME_OVER:
+            document.getElementById("game").style.display = "grid"
             document.getElementById("settings").style.display = "none"
             document.getElementById("start").style.display = "flex"
             document.getElementById("settingsButton").style.display = "flex"
