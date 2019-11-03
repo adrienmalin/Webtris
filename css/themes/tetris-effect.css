@@ -1,0 +1,35 @@
+.invisible-grid > .empty-cell {
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.visible-grid > .empty-cell {
+    background: transparent;
+    border: 1px inset rgba(128, 128, 128, 0.3);
+}
+
+.mino, .I-mino, .J-mino, .L-mino, .O-mino, .S-mino, .T-mino, .Z-mino {
+    background: rgba(127, 229, 255, 0.3);
+    border: 1px solid rgba(127, 229, 255, 0.7);
+    border-radius: 0.3vmin;
+}
+
+.locked-mino {
+    background: rgba(242, 255, 255, 0.5);
+}
+
+.cleared-line {
+    background: white;
+}
+
+.trail {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.3vmin;
+}
+
+.ghost {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.3vmin;
+}

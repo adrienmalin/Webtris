@@ -74,10 +74,21 @@
                 <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange"></label>
                 <input id="autorepeatPeriodRange" type="range" id="autorepeatPeriodRange" oninput="autorepeatPeriodChanged()" min="2" max="50" step="2" />
             </fieldset>
-    <!--        <fieldset>
+            <fieldset>
                 <legend>Thème</legend>
-                <div>À venir</div>
-            </fieldset> -->
+                <div></div>
+                <select id="themeSelect" onchange="themeChanged()">
+<?php
+    foreach(scandir("css/themes") as $theme) {
+        if (!in_array($theme,array(".","..")))
+            echo "                    <option>" . pathinfo($theme, PATHINFO_FILENAME) . "</option>\n";
+    }
+?>
+                </select>
+<?php
+    echoTable("themePreview",   6,  0,  6);
+?>
+            </fieldset>
             <div>
                 <input id="showGhostCheckbox" type="checkbox" checked onchange="showGhostChanged()"/>
                 <label for="showGhostCheckbox">Afficher le fantôme</label>

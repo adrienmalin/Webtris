@@ -22,6 +22,8 @@ const MATRIX_INVISIBLE_ROWS = 4
 const MATRIX_COLUMNS = 10
 const NEXT_ROWS =      24
 const NEXT_COLUMNS =    6
+const THEME_ROWS =      6
+const THEME_COLUMNS =   6
 const EMPTY_CELL_CLASS = "empty-cell"
 const MINO_CLASS = "mino"
 const LOCKED_PIECE_CLASS = "locked-mino"
@@ -31,6 +33,7 @@ const CLEARED_LINE_CLASS = "mino cleared-line"
 const HELD_PIECE_POSITION =    [2, 3]
 const FALLING_PIECE_POSITION = [4, 3]
 const NEXT_PIECES_POSITIONS =  Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
+const THEME_PIECE_POSITION =   [2, 3]
 const LOCK_DELAY =       500
 const FALL_PERIOD =     1000
 const AUTOREPEAT_DELAY = 300
@@ -83,6 +86,7 @@ const actionsDefaultKeys = {
     pause: "Escape",
 }
 const RETRIES = 3
+const DEFAULT_THEME = "light-relief"
 
 
 // Classes
@@ -307,6 +311,14 @@ class NextQueue extends MinoesTable {
         if (state != STATE.PAUSED) {
             this.pieces.forEach(piece => this.drawPiece(piece))
         }
+    }
+}
+
+
+class ThemePreview extends MinoesTable {
+    constructor() {
+        super("themePreview", THEME_ROWS, THEME_COLUMNS)
+        this.piece = new Tetromino(THEME_PIECE_POSITION, "T")
     }
 }
 
@@ -773,6 +785,9 @@ function applySettings() {
     autorepeatDelay = localStorage.getItem("autorepeatDelay") || AUTOREPEAT_DELAY
     autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || AUTOREPEAT_PERIOD
 
+    theme = localStorage.getItem("theme") || DEFAULT_THEME
+    loadTheme()
+
     showGhost = localStorage.getItem("showGhost")
     if (showGhost)
         showGhost = (showGhost == "true")
@@ -801,6 +816,8 @@ function showSettings() {
     document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
     document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+
+    themePreview.drawPiece(themePreview.piece)
 
     document.getElementById("showGhostCheckbox").checked = showGhost
 
@@ -862,6 +879,22 @@ function autorepeatPeriodChanged() {
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
 }
 
+function themeChanged() {
+    theme = document.getElementById("themeSelect").value
+    localStorage.setItem("theme", theme)
+    loadTheme()
+}
+
+function loadTheme() {
+    var link  = document.createElement('link')
+    link.id   = "theme";
+    link.rel  = 'stylesheet'
+    link.type = 'text/css'
+    link.href = 'css/themes/' + theme+ '.css'
+    link.media = 'all'
+    document.getElementsByTagName('head')[0].appendChild(link);
+}
+
 function showGhostChanged() {
     showGhost = (document.getElementById("showGhostCheckbox").checked == true)
     localStorage.setItem("showGhost", showGhost)
@@ -893,4 +926,5 @@ window.onload = function() {
     stats = new Stats()
     matrix = new Matrix()
     nextQueue = new NextQueue()
+    themePreview = new ThemePreview()
 }
