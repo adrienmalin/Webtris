@@ -206,7 +206,6 @@ class MinoesTable {
     constructor(id, rows, columns) {
         this.rows = rows
         this.columns = columns
-        this.piece = null
         this.table = document.getElementById(id)
     }
 
@@ -233,6 +232,10 @@ class HoldQueue extends MinoesTable {
         super("hold", HOLD_ROWS, HOLD_COLUMNS)
     }
 
+    newGame() {
+        this.piece = null
+    }
+
     draw() {
         this.clearTable()
         if (this.piece && state != STATE.PAUSED)
@@ -244,6 +247,9 @@ class HoldQueue extends MinoesTable {
 class Matrix extends MinoesTable {
     constructor() {
         super("matrix", MATRIX_ROWS, MATRIX_COLUMNS)
+    }
+
+    newGame() {
         this.lockedMinoes = Array.from(Array(MATRIX_ROWS+3), row => Array(MATRIX_COLUMNS))
         this.piece = null
         this.clearedLines = []
@@ -303,6 +309,9 @@ class Matrix extends MinoesTable {
 class NextQueue extends MinoesTable {
     constructor() {
         super("next", NEXT_ROWS, NEXT_COLUMNS)
+    }
+
+    newGame() {
         this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT_PIECES_POSITIONS[k]))
     }
 
@@ -331,12 +340,18 @@ class Stats {
         this.levelCell = document.getElementById("level")
         this.goalCell = document.getElementById("goal")
         this.clearedLinesCell = document.getElementById("clearedLines")
-        this._score = 0
         this.highScore = Number(localStorage.getItem('highScore'))
-        this.highScoreCell.innerHTML = this.highScore.toLocaleString()
+        this.highScoreCell.innerText = this.highScore.toLocaleString()
+    }
+
+    newGame() {
+        this.score = 0
         this.goal = 0
+        this.goalCell.innerText = this.goal
         this.clearedLines = 0
+        this.clearedLinesCell.innerText = this.clearedLines
         this.time = 0
+        this.timeCell.innerText = timeFormat(0)
         this.combo = -1
         this.lockDelay = LOCK_DELAY
         this.fallPeriod = FALL_PERIOD
@@ -349,10 +364,10 @@ class Stats {
     set score(score) {
         if (score != NaN) {
             this._score = score
-            this.scoreCell.innerHTML = this._score.toLocaleString()
+            this.scoreCell.innerText = this._score.toLocaleString()
             if (score > this.highScore)
                 this.highScore = score
-                this.highScoreCell.innerHTML = this.highScore.toLocaleString()
+                this.highScoreCell.innerText = this.highScore.toLocaleString()
         }
     }
 
@@ -361,10 +376,10 @@ class Stats {
             this.level = level
         else
             this.level++
-        this.levelCell.innerHTML = this.level
+        this.levelCell.innerText = this.level
         printTempTexts(`LEVEL<br/>${this.level}`)
         this.goal += 5 * this.level
-        this.goalCell.innerHTML = this.goal
+        this.goalCell.innerText = this.goal
         if (this.level <= 20)
             this.fallPeriod = 1000 * Math.pow(0.8 - ((this.level - 1) * 0.007), this.level - 1)
         if (this.level > 15)
@@ -386,10 +401,10 @@ class Stats {
 
         if (clearedLines || tSpin) {
             this.clearedLines += clearedLines
-            this.clearedLinesCell.innerHTML = clearedLines
+            this.clearedLinesCell.innerText = clearedLines
             patternScore = SCORES[clearedLines][tSpin]
             this.goal -= patternScore
-            this.goalCell.innerHTML = this.goal
+            this.goalCell.innerText = this.goal
             patternScore *= 100 * this.level
             patternName = patternName.join("\n")
         }
@@ -410,8 +425,13 @@ class Stats {
 
 
 // Functions
-function start() {
+function newGame() {
     document.getElementById("startButton").blur()
+
+    holdQueue.newGame()
+    matrix.newGame()
+    nextQueue.newGame()
+    stats.newGame()
     
     var startLevel = document.getElementById("startLevel").value
     localStorage.setItem("startLevel", startLevel)
@@ -610,7 +630,7 @@ function gameOver() {
     XHR.open('POST', 'inleaderboard.php')
     XHR.send(FD)
 
-    document.getElementById("game").style.display = "none"
+    document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
     document.getElementById("start").style.display = "flex"
     document.getElementById("settingsButton").style.display = "flex"
@@ -760,7 +780,7 @@ function delTempTexts(self) {
 }
 
 function clock() {
-    stats.timeCell.innerHTML = timeFormat(1000 * ++stats.time)
+    stats.timeCell.innerText = timeFormat(1000 * ++stats.time)
 }
 
 function getKeyName(action) {

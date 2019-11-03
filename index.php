@@ -95,11 +95,12 @@
             </div>
             <button type="button" onclick="hideSettings()">RETOUR</button>
         </div>
-        <div id="start">
+        <fieldset id="start">
+            <legend>Nouvelle partie</legend>
             <label for="startLevel">Niveau</label>
             <input type="number" id="startLevel" min="1" max="15" step="1">
-            <button id="startButton" type="button" onclick="start()" disabled>JOUER</button>
-        </div>
+            <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+        </fieldset>
         <div>
             <button id="settingsButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>
         </div>

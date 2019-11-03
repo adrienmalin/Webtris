@@ -41,13 +41,9 @@ div {
     flex-wrap: wrap;
     justify-content: center;
     align-content: center;
-    margin: 4vmin;
+    margin: 2vmin auto;
     text-align: center;
-    column-gap: 1vmin;
-}
-
-div * {
-    margin: auto 2vmin;
+    column-gap: 2vmin;
 }
 
 fieldset {
