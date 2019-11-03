@@ -301,14 +301,6 @@ class Matrix extends MinoesTable {
                     this.drawMino(x, y, className)
                 }
             }
-
-            // trail
-            if (this.trail.height) {
-                this.trail.minoesPos.forEach(pos => {
-                    for (var y = pos.y; y < pos.y + this.trail.height; y++)
-                        this.drawMino(pos.x, y, CLASSNAME.TRAIL)
-                })
-            }
             
             //ghost
             if (showGhost && !this.piece.locked && state != STATE.GAME_OVER) {
@@ -318,6 +310,15 @@ class Matrix extends MinoesTable {
             }
 
             this.drawPiece(this.piece)
+
+            // trail
+            if (this.trail.height) {
+                this.trail.minoesPos.forEach(pos => {
+                    for (var y = pos.y; y < pos.y + this.trail.height; y++)
+                        if (this.table.rows[y].cells[pos.x].className == CLASSNAME.EMPTY_CELL)
+                            this.drawMino(pos.x, y, CLASSNAME.TRAIL)
+                })
+            }
         }
     }
 }
@@ -601,7 +602,7 @@ function gameOver() {
     removeEventListener("keydown", keyDownHandler, false)
     removeEventListener("keyup", keyUpHandler, false)
 
-    var info = `GAME OVER\nScore : ${stats.score}`
+    var info = `GAME OVER\nScore : ${stats.score.toLocaleString()}`
     if (stats.score == stats.highScore) {
         localStorage.setItem('highScore', stats.highScore)
         info += "\nBravo ! Vous avez battu votre précédent record."
@@ -962,6 +963,7 @@ window.onload = function() {
     document.getElementById("startLevel").value = localStorage.getItem("startLevel") || 1
 
     document.getElementById("startButton").disabled = false
+    document.getElementById("startButton").focus();
     document.getElementById("settingsButton").disabled = false
     messageDiv = document.getElementById("message")
 
