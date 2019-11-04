@@ -70,7 +70,7 @@
             <fieldset>
                 <legend>Répétition automatique</legend>
                 <label id="autorepeatDelayRangeLabel" for="autorepeatDelayRange"></label>
-                <input id="autorepeatDelayRange" type="range" oninput="autorepeatDelayChanged()" min="100" max="1000" step="50" />
+                <input id="autorepeatDelayRange" type="range" oninput="autorepeatDelayChanged()" min="100" max="1000" step="10" />
                 <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange"></label>
                 <input id="autorepeatPeriodRange" type="range" id="autorepeatPeriodRange" oninput="autorepeatPeriodChanged()" min="2" max="50" step="2" />
             </fieldset>
@@ -100,6 +100,7 @@
             <label for="startLevel">Niveau</label>
             <input type="number" id="startLevel" min="1" max="15" step="1">
             <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+            <button id="settingsStartButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>
         </fieldset>
         <div>
             <button id="settingsButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>

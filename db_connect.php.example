@@ -1,0 +1,7 @@
+// Complete and rename to db_connect.php
+<?php
+    $DB_NAME = "webtris";
+    $DB_USER = XXX;
+    $DB_PASSWORD = XXX;
+    $DB_HOST = "localhost";
+?>

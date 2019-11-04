@@ -291,13 +291,10 @@ class Matrix extends MinoesTable {
         } else {
             for (var y = 0; y < this.rows; y++) {
                 for (var x = 0; x < this.columns; x++) {
-                    var className = this.lockedMinoes[y][x]
-                    if (!className) {
-                        if (this.clearedLines.includes(y))
-                            className = CLASSNAME.CLEARED_LINE
-                        else
-                            className = CLASSNAME.EMPTY_CELL
-                    }
+                    if (this.clearedLines.includes(y))
+                        var className = CLASSNAME.CLEARED_LINE
+                    else
+                        var className = this.lockedMinoes[y][x] || CLASSNAME.EMPTY_CELL
                     this.drawMino(x, y, className)
                 }
             }
@@ -651,7 +648,7 @@ function gameOver() {
     document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
     document.getElementById("start").style.display = "flex"
-    document.getElementById("settingsButton").style.display = "flex"
+    document.getElementById("settingsButton").style.display = "none"
     document.getElementById("leaderboardLink").style.display = "flex"
 }
 
@@ -842,20 +839,21 @@ function showSettings() {
     if (state == STATE.PLAYING)
         pause()
 
-    document.getElementById("set-moveLeft-key").innerHTML = replaceSpace(getKeyName("moveLeft"))
+    document.getElementById("set-moveLeft-key" ).innerHTML = replaceSpace(getKeyName("moveLeft"))
     document.getElementById("set-moveRight-key").innerHTML = replaceSpace(getKeyName("moveRight"))
-    document.getElementById("set-softDrop-key").innerHTML = replaceSpace(getKeyName("softDrop"))
-    document.getElementById("set-hardDrop-key").innerHTML = replaceSpace(getKeyName("hardDrop"))
-    document.getElementById("set-rotateCW-key").innerHTML = replaceSpace(getKeyName("rotateCW"))
+    document.getElementById("set-softDrop-key" ).innerHTML = replaceSpace(getKeyName("softDrop"))
+    document.getElementById("set-hardDrop-key" ).innerHTML = replaceSpace(getKeyName("hardDrop"))
+    document.getElementById("set-rotateCW-key" ).innerHTML = replaceSpace(getKeyName("rotateCW"))
     document.getElementById("set-rotateCCW-key").innerHTML = replaceSpace(getKeyName("rotateCCW"))
-    document.getElementById("set-hold-key").innerHTML = replaceSpace(getKeyName("hold"))
-    document.getElementById("set-pause-key").innerHTML = replaceSpace(getKeyName("pause"))
+    document.getElementById("set-hold-key"     ).innerHTML = replaceSpace(getKeyName("hold"))
+    document.getElementById("set-pause-key"    ).innerHTML = replaceSpace(getKeyName("pause"))
 
     document.getElementById("autorepeatDelayRange").value = autorepeatDelay
     document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
     document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
 
+    document.getElementById("themeSelect").value=theme;
     themePreview.drawPiece(themePreview.piece)
 
     document.getElementById("showGhostCheckbox").checked = showGhost
@@ -874,14 +872,14 @@ function hideSettings() {
             document.getElementById("game").style.display = "none"
             document.getElementById("settings").style.display = "none"
             document.getElementById("start").style.display = "flex"
-            document.getElementById("settingsButton").style.display = "flex"
+            document.getElementById("settingsButton").style.display = "none"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.GAME_OVER:
             document.getElementById("game").style.display = "grid"
             document.getElementById("settings").style.display = "none"
             document.getElementById("start").style.display = "flex"
-            document.getElementById("settingsButton").style.display = "flex"
+            document.getElementById("settingsButton").style.display = "none"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.PAUSED:
@@ -965,6 +963,7 @@ window.onload = function() {
     document.getElementById("startButton").disabled = false
     document.getElementById("startButton").focus();
     document.getElementById("settingsButton").disabled = false
+    document.getElementById("settingsStartButton").disabled = false
     messageDiv = document.getElementById("message")
 
     scheduler = new Scheduler()
