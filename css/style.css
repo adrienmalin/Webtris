@@ -98,6 +98,7 @@ a:hover {
 .minoes-table {
     table-layout: fixed;
     border-spacing: 0;
+    margin: 0;
 }
 
 th {
@@ -141,6 +142,7 @@ th, td {
     height: 0;
     width: 18vmin;
     justify-self: end;
+    margin: 0;
 }
 
 .name {

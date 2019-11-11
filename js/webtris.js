@@ -65,7 +65,7 @@ const SPIN = {
 }
 const T_SPIN = {
     NONE: "",
-    MINI: "MINI\nT-SPIN",
+    MINI: "MINI T-SPIN",
     T_SPIN: "T-SPIN"
 }
 const T_SLOT = {
@@ -77,21 +77,22 @@ const T_SLOT = {
 const T_SLOT_POS = [
     [-1, -1],
     [1, -1],
-    [1, 1],[-1, 1]
+    [1, 1],
+    [-1, 1]
 ]
 const SCORES = [
-    {linesClearedName: "",       "": 0, "MINI\nT-SPIN": 1, "T-SPIN": 4},
-    {linesClearedName: "SINGLE", "": 1, "MINI\nT-SPIN": 2, "T-SPIN": 8},
-    {linesClearedName: "DOUBLE", "": 3, "T-SPIN": 12},
-    {linesClearedName: "TRIPLE", "": 5, "T-SPIN": 16},
-    {linesClearedName: "TETRIS", "": 8},
+    {linesClearedName: "",       "": 000, "MINI T-SPIN": 100, "T-SPIN": 400},
+    {linesClearedName: "SINGLE", "": 100, "MINI T-SPIN": 200, "T-SPIN": 800},
+    {linesClearedName: "DOUBLE", "": 300, "T-SPIN": 1200},
+    {linesClearedName: "TRIPLE", "": 500, "T-SPIN": 1600},
+    {linesClearedName: "TETRIS", "": 800},
 ]
 const REPEATABLE_ACTIONS = [moveLeft, moveRight, softDrop]
 const STATE = {
     WAITING: "WAITING",
     PLAYING: "PLAYING",
     PAUSED: "PAUSE",
-    GAME_OVER: "GAME OVER"
+    GAME_OVER: "GAME OVER",
 }
 const actionsDefaultKeys = {
     moveLeft: "ArrowLeft",
@@ -267,7 +268,7 @@ class Matrix extends MinoesTable {
     }
 
     newGame() {
-        this.lockedMinoes = Array.from(Array(MATRIX.ROWS+3), row => Array(MATRIX.COLUMNS))
+        this.lockedMinoes = Array.from(Array(MATRIX.ROWS), row => Array(MATRIX.COLUMNS))
         this.piece = null
         this.clearedLines = []
         this.trail = {
@@ -277,7 +278,7 @@ class Matrix extends MinoesTable {
     }
     
     cellIsOccupied(x, y) {
-        return 0 <= x && x < MATRIX.COLUMNS && y < MATRIX.ROWS ? this.lockedMinoes[y][x] : true
+        return 0 <= x && x < MATRIX.COLUMNS && y < MATRIX.ROWS ? Boolean(this.lockedMinoes[y][x]) : true
     }
     
     spaceToMove(minoesAbsPos) {
@@ -377,12 +378,11 @@ class Stats {
     }
 
     set score(score) {
-        if (score != NaN) {
-            this._score = score
-            this.scoreCell.innerText = this._score.toLocaleString()
-            if (score > this.highScore)
-                this.highScore = score
-                this.highScoreCell.innerText = this.highScore.toLocaleString()
+        this._score = score
+        this.scoreCell.innerText = this._score.toLocaleString()
+        if (score > this.highScore) {
+            this.highScore = score
+            this.highScoreCell.innerText = this.highScore.toLocaleString()
         }
     }
 
@@ -392,7 +392,7 @@ class Stats {
         else
             this.level++
         this.levelCell.innerText = this.level
-        printTempTexts(`LEVEL<br/>${this.level}`)
+        printTempTexts(`NIVEAU<br/>${this.level}`)
         this.goal += 5 * this.level
         this.goalCell.innerText = this.goal
         if (this.level <= 20)
@@ -416,11 +416,10 @@ class Stats {
 
         if (clearedLines || tSpin) {
             this.clearedLines += clearedLines
-            this.clearedLinesCell.innerText = clearedLines
-            patternScore = SCORES[clearedLines][tSpin]
-            this.goal -= patternScore
+            this.clearedLinesCell.innerText = this.clearedLines
+            patternScore = SCORES[clearedLines][tSpin] * this.level
+            this.goal -= clearedLines
             this.goalCell.innerText = this.goal
-            patternScore *= 100 * this.level
             patternName = patternName.join("\n")
         }
         if (this.combo >= 1)
@@ -502,8 +501,7 @@ function move(movement, testMinoesPos=matrix.piece.minoesPos, hardDrop=false) {
     if (matrix.spaceToMove(testMinoesPos.translate(testPos))) {
         matrix.piece.pos = testPos
         matrix.piece.minoesPos = testMinoesPos
-        if (movement != MOVEMENT.DOWN)
-            matrix.piece.rotatedLast = false
+        matrix.piece.rotatedLast = false
         if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos.add(MOVEMENT.DOWN))))
             fallingPhase()
         else if (!hardDrop) {
@@ -554,10 +552,10 @@ function lockDown(){
         var tSpin = T_SPIN.NONE
         if (matrix.piece.rotatedLast && matrix.piece.shape == "T") {
             const tSlots = T_SLOT_POS.translate(matrix.piece.pos).map(pos => matrix.cellIsOccupied(...pos)),
-                  a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
-                  b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
-                  c = tSlots[(matrix.piece.orientation+T_SLOT.C)%4],
-                  d = tSlots[(matrix.piece.orientation+T_SLOT.D)%4]
+                a = tSlots[(matrix.piece.orientation+T_SLOT.A)%4],
+                b = tSlots[(matrix.piece.orientation+T_SLOT.B)%4],
+                c = tSlots[(matrix.piece.orientation+T_SLOT.C)%4],
+                d = tSlots[(matrix.piece.orientation+T_SLOT.D)%4]
             if (a && b && (c || d))
                 tSpin = T_SPIN.T_SPIN
             else if (c && d && (a || b))
@@ -647,7 +645,7 @@ function gameOver() {
 
     document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
-    document.getElementById("start").style.display = "flex"
+    document.getElementById("start").style.display = "grid"
     document.getElementById("settingsButton").style.display = "none"
     document.getElementById("leaderboardLink").style.display = "flex"
 }
@@ -766,15 +764,17 @@ function pause() {
 }
 
 function resume() {
-    state = STATE.PLAYING
-    messageDiv.innerHTML = ""
-    scheduler.setInterval(lockPhase, stats.fallPeriod)
-    if (matrix.piece.locked)
-        scheduler.setTimeout(lockDown, stats.lockDelay)
-    scheduler.setInterval(clock, 1000)
-    holdQueue.draw()
-    matrix.draw()
-    nextQueue.draw()
+    if (document.getElementById("game").style.display == "grid") {
+        state = STATE.PLAYING
+        messageDiv.innerHTML = ""
+        scheduler.setInterval(lockPhase, stats.fallPeriod)
+        if (matrix.piece.locked)
+            scheduler.setTimeout(lockDown, stats.lockDelay)
+        scheduler.setInterval(clock, 1000)
+        holdQueue.draw()
+        matrix.draw()
+        nextQueue.draw()
+    }
 }
 
 function printTempTexts(text) {
@@ -871,14 +871,14 @@ function hideSettings() {
         case STATE.WAITING:
             document.getElementById("game").style.display = "none"
             document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "flex"
+            document.getElementById("start").style.display = "grid"
             document.getElementById("settingsButton").style.display = "none"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.GAME_OVER:
             document.getElementById("game").style.display = "grid"
             document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "flex"
+            document.getElementById("start").style.display = "grid"
             document.getElementById("settingsButton").style.display = "none"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
@@ -888,7 +888,6 @@ function hideSettings() {
             document.getElementById("start").style.display = "none"
             document.getElementById("settingsButton").style.display = "flex"
             document.getElementById("leaderboardLink").style.display = "none"
-            resume()
         break
     }
 }

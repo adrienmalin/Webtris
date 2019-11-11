@@ -7,7 +7,9 @@
         <link rel="stylesheet" type="text/css" href="css/style.css" />
     </head>
     <body>
-        <h1>WEBTRIS</h1>
+        <header>
+            <h1>WEBTRIS</h1>
+        </header>
         <table id="leaderboard">
             <caption>MEILLEURS SCORES</caption>
 <?php
