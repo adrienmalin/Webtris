@@ -609,7 +609,7 @@ function gameOver() {
     FD.append("score", stats.score)
     XHR.addEventListener('load', function(event) {
         if (event.target.responseText == "true") {
-            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 20.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
+            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 20.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("player") || "")
             if (player.length) {
                 localStorage.setItem("player", player)
                 XHR = new XMLHttpRequest()
@@ -646,7 +646,7 @@ function gameOver() {
     document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
     document.getElementById("start").style.display = "grid"
-    document.getElementById("settingsButton").style.display = "none"
+    document.getElementById("settingsButton").style.display = "flex"
     document.getElementById("leaderboardLink").style.display = "flex"
 }
 
@@ -960,9 +960,8 @@ window.onload = function() {
     document.getElementById("startLevel").value = localStorage.getItem("startLevel") || 1
 
     document.getElementById("startButton").disabled = false
-    document.getElementById("startButton").focus();
+    document.getElementById("startButton").focus()
     document.getElementById("settingsButton").disabled = false
-    document.getElementById("settingsStartButton").disabled = false
     messageDiv = document.getElementById("message")
 
     scheduler = new Scheduler()

@@ -208,10 +208,6 @@ th, td {
     height: 18vmin;
 }
 
-#settingsButton {
-    display: none;
-}
-
 #leaderboard {
     min-width: 25%;
     margin: auto;
