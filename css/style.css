@@ -13,12 +13,12 @@
     src: local('Share Tech Mono Regular'), local('ShareTechMono-Regular'), url(fonts/ShareTechMono.woff2) format('woff2');
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
- 
+
+
 * {
-    color: white;
     font-family: 'Share Tech';
     font-size: 1em;
-    margin: auto 1vmin;
+    text-align: center;
 }
 
 body {
@@ -28,62 +28,78 @@ body {
     background-attachment: fixed;
 }
 
+
 h1 {
     font-size: 5vmin;
     margin: 1vmin auto;
     text-shadow: 3px 2px rgba(153, 145, 175, 0.5);
     text-align: center;
+    color: white;
 }
 
 div {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
     justify-content: center;
-    align-content: center;
-    margin: 1vmin auto;
-    text-align: center;
-    column-gap: 2vmin;
+    align-items: center;
 }
 
 fieldset {
     display: grid;
     grid-template-columns: 3fr 2fr 3fr 2fr;
     grid-gap: 1vmin;
-    margin: 1vmin auto;
-    justify-items: center;
-    align-items: baseline;
+    margin: 1vmin;
+    border: 1px white solid;
+    border-radius: 4px;
+    align-items: center;
 }
 
-label {
-    font-size: 1em;
+fieldset > legend, label {
+    color: white;
 }
 
-input[type="number"] {
-    color: black;
-    width: 2.5em;
-}
-
-fieldset > input {
+fieldset > input, select, button {
     width: 100%;
 }
 
 button {
-    color: black;
-    margin: 0.5vmin;
+    width: auto;
 }
 
-select {
-    color:black;
+#showGhostDiv {
+    grid-column-start: 1;
+    grid-column-end: 5;
+    width: 100%;
 }
 
-a {
-    text-decoration: none;
-    font-size: 1em;
+#settingsButton {
+    display: none;
+    width: auto;
+    margin: 2vmin;
 }
 
-a:hover {
-    color: lightcyan;
+#hideSettingsButton {
+    display: none;
+    width: auto;
+    margin: auto;
+}
+
+.minoes-table {
+    table-layout: fixed;
+    border-spacing: 0;
+    margin: auto;
+}
+
+tr {
+    height: 3vmin;
+}
+
+th, td {
+    font-weight: normal;
+    padding: 0;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+    width: 3vmin;
 }
 
 #game {
@@ -95,54 +111,72 @@ a:hover {
     margin: auto;
 }
 
-.minoes-table {
-    table-layout: fixed;
-    border-spacing: 0;
-    margin: 0;
-}
-
-th {
-    font-weight: normal;
-}
-
-th, td {
-    padding: 0;
-    border-width: 1px;
-    border-style: solid;
-    border-color: transparent;
-    height: 2vmin;
-    width: 2vmin;
-}
-
 #hold {
     grid-column: 1;
     grid-row: 1;
-    width: 18vmin;
-    height: 18vmin;
     justify-self: end;
-}
-
-#matrix {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    width: 30vmin;
-    height: 72vmin;
-}
-
-#next {
-    grid-column: 3;
-    grid-row: 1 / 3;
-    width: 18vmin;
-    height: 72vmin;
 }
 
 #stats {
     grid-column: 1;
     grid-row: 2;
     height: 0;
-    width: 18vmin;
     justify-self: end;
-    margin: 0;
+    margin: 0 auto;
+}
+
+#score {
+    font-weight: bold;
+}
+
+#matrix {
+    grid-column: 2;
+    grid-row: 1 / 3;
+}
+
+#message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 4vmin;
+    text-shadow: 1px 1px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    font-weight: bold;
+}
+
+#next {
+    grid-column: 3;
+    grid-row: 1 / 3;
+}
+
+a {
+    text-decoration: none;
+    font-size: 1em;
+    color: white;
+}
+
+a:hover {
+    color: lightcyan;
+}
+
+#leaderboardLink {
+    display: flex;
+    justify-content: center;
+}
+
+
+#leaderboard {
+    min-width: 25%;
+    margin: auto;
+    text-align: center;
+    border-top: 1px solid white;
+    caption-side: top;
+}
+
+caption {
+    color: white;
 }
 
 .name {
@@ -164,58 +198,4 @@ th, td {
     text-align: right;
     font-size: 2.5vmin;
     color: white;
-}
-
-#score {
-    font-weight: bold;
-}
-
-#message {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 4vmin;
-    text-shadow: 1px 1px rgba(0, 0, 0, 0.8);
-    text-align: center;
-    font-weight: bold;
-}
-
-#settings {
-    display: none;
-}
-
-#settings > * {
-    margin: 2vmin auto;
-}
-
-#settings > div {
-    justify-content: left;
-    width: 85vmin;
-}
-
-#settings > div > * {
-    margin: 0;
-}
-
-#keyboard button {
-    width: 100%;
-}
-
-#themePreview {
-    width: 18vmin;
-    height: 18vmin;
-}
-
-#settingsButton {
-    display: none;
-}
-
-#leaderboard {
-    min-width: 25%;
-    margin: auto;
-    text-align: center;
-    border-top: 1px solid white;
-    caption-side: top;
 }

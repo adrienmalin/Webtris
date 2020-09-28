@@ -18,7 +18,7 @@
             for ($y = 0; $y < $invisibleRows; $y++) {
                 echo "                <tr class=invisible-grid>";
                 for ($x = 0; $x < $columns; $x++) {
-                    echo "<td class=empty-cell></td>";
+                    echo "<th class=empty-cell></td>";
                 }
                 echo "</tr>\n";
             }
@@ -55,7 +55,7 @@
     <?php
         function addButton($action, $label) {
             echo "                <label for='set-$action-key'>$label</label>\n";
-            echo "                <button id='set-$action-key' type='button' onclick=\"waitKey(this, '$action')\"></button>";
+            echo "                <button id='set-$action-key' type='button' onclick=\"waitKey(this, '$action')\">...</button>";
         }
         addButton("moveLeft", "Gauche");
         addButton("moveRight", "Droite");
@@ -69,9 +69,9 @@
             </fieldset>
             <fieldset>
                 <legend>Répétition automatique</legend>
-                <label id="autorepeatDelayRangeLabel" for="autorepeatDelayRange"></label>
+                <label id="autorepeatDelayRangeLabel" for="autorepeatDelayRange">Délai initial</label>
                 <input id="autorepeatDelayRange" type="range" oninput="autorepeatDelayChanged()" min="100" max="1000" step="10" />
-                <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange"></label>
+                <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange">Période</label>
                 <input id="autorepeatPeriodRange" type="range" id="autorepeatPeriodRange" oninput="autorepeatPeriodChanged()" min="2" max="50" step="2" />
             </fieldset>
             <fieldset>
@@ -86,22 +86,24 @@
 ?>
                 </select>
 <?php
-    echoTable("themePreview",   6,  0,  6);
+    echoTable("themePreview",   2,  0,  3);
 ?>
-            </fieldset>
-            <div>
+            <div id="showGhostDiv">
                 <input id="showGhostCheckbox" type="checkbox" checked onchange="showGhostChanged()"/>
                 <label for="showGhostCheckbox">Afficher le fantôme</label>
             </div>
-            <button type="button" onclick="hideSettings()">RETOUR</button>
+            </fieldset>
+            <button id="hideSettingsButton" type="button" onclick="hideSettings()">RETOUR</button>
         </div>
-        <fieldset id="start">
-            <legend>Nouvelle partie</legend>
-            <label for="startLevel">Niveau</label>
-            <input type="number" id="startLevel" min="1" max="15" step="1">
-            <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
-            <button id="settingsStartButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>
-        </fieldset>
+        <div id="start">
+            <fieldset>
+                <legend>Nouvelle partie</legend>
+                <label for="startLevel">Niveau</label>
+                <input type="number" id="startLevel" min="1" max="15" step="1">
+                <div></div>
+                <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+            </fieldset>
+        </div>
         <div>
             <button id="settingsButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>
         </div>

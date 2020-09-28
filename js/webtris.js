@@ -16,21 +16,17 @@ Array.prototype.pick =      function()       { return this.splice(Math.floor(Mat
 // Constants
 const NEXT_PIECES = 6
 const HOLD = {
-    ROWS: 6,
-    COLUMNS: 6
+    PIECE_POSITION: [2, 3]
 }
 const MATRIX = {
-    ROWS: 24,
     INVISIBLE_ROWS: 4,
-    COLUMNS: 10
+    PIECE_POSITION: [4, 3]
 }
 const NEXT= {
-    ROWS: 24,
-    COLUMNS: 6
+    PIECE_POSITION: Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3])
 }
 const THEME = {
-    ROWS: 6,
-    COLUMNS: 6
+    PIECE_POSITION: [1, 1]
 }
 const CLASSNAME = {
     EMPTY_CELL: "empty-cell",
@@ -40,16 +36,10 @@ const CLASSNAME = {
     GHOST: "ghost",
     CLEARED_LINE: "mino cleared-line"
 }
-const POSITION = {
-    HELD_PIECE: [2, 3],
-    FALLING_PIECE: [4, 3],
-    NEXT_PIECES: Array.from({length: NEXT_PIECES}, (v, k) => [2, k*4+3]),
-    THEMED_PIECE: [2, 3]
-}
 const DELAY = {
     LOCK: 500,
     FALL: 1000,
-    AUTOREPEAT_DELAY: 300,
+    autorepeat: 300,
     AUTOREPEAT_PERIOD: 10,
     ANIMATION: 100,
     MESSAGE: 700
@@ -222,10 +212,10 @@ class Tetromino {
 
 
 class MinoesTable {
-    constructor(id, rows, columns) {
-        this.rows = rows
-        this.columns = columns
+    constructor(id) {
         this.table = document.getElementById(id)
+        this.rows = this.table.rows.length
+        this.columns = this.table.rows[0].childElementCount
     }
 
     drawMino(x, y, className) {
@@ -247,7 +237,7 @@ class MinoesTable {
 
 class HoldQueue extends MinoesTable {
     constructor() {
-        super("hold", HOLD.ROWS, HOLD.COLUMNS)
+        super("hold")
     }
 
     newGame() {
@@ -264,11 +254,11 @@ class HoldQueue extends MinoesTable {
 
 class Matrix extends MinoesTable {
     constructor() {
-        super("matrix", MATRIX.ROWS, MATRIX.COLUMNS)
+        super("matrix")
     }
 
     newGame() {
-        this.lockedMinoes = Array.from(Array(MATRIX.ROWS), row => Array(MATRIX.COLUMNS))
+        this.lockedMinoes = Array.from(Array(this.rows), row => Array(this.columns))
         this.piece = null
         this.clearedLines = []
         this.trail = {
@@ -278,7 +268,7 @@ class Matrix extends MinoesTable {
     }
     
     cellIsOccupied(x, y) {
-        return 0 <= x && x < MATRIX.COLUMNS && y < MATRIX.ROWS ? Boolean(this.lockedMinoes[y][x]) : true
+        return 0 <= x && x < this.columns && y < this.rows ? Boolean(this.lockedMinoes[y][x]) : true
     }
     
     spaceToMove(minoesAbsPos) {
@@ -300,7 +290,7 @@ class Matrix extends MinoesTable {
                 }
             }
             
-            //ghost
+            // ghost
             if (showGhost && !this.piece.locked && state != STATE.GAME_OVER) {
                 for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos.y++) {}
                 ghost.pos.y--
@@ -324,11 +314,11 @@ class Matrix extends MinoesTable {
 
 class NextQueue extends MinoesTable {
     constructor() {
-        super("next", NEXT.ROWS, NEXT.COLUMNS)
+        super("next")
     }
 
     newGame() {
-        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(POSITION.NEXT_PIECES[k]))
+        this.pieces = Array.from({length: NEXT_PIECES}, (v, k) => new Tetromino(NEXT.PIECE_POSITION[k]))
     }
 
     draw() {
@@ -342,8 +332,8 @@ class NextQueue extends MinoesTable {
 
 class ThemePreview extends MinoesTable {
     constructor() {
-        super("themePreview", THEME.ROWS, THEME.COLUMNS)
-        this.piece = new Tetromino(POSITION.THEMED_PIECE, "T")
+        super("themePreview")
+        this.piece = new Tetromino(THEME.PIECE_POSITION, "T")
     }
 }
 
@@ -452,8 +442,8 @@ function newGame() {
 
     document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
-    document.getElementById("start").style.display = "none"
     document.getElementById("settingsButton").style.display = "flex"
+    document.getElementById("start").style.display = "none"
     document.getElementById("leaderboardLink").style.display = "none"
 
     state = STATE.PLAYING
@@ -474,10 +464,10 @@ function generationPhase(held_piece=null) {
     if (!held_piece) {
         matrix.piece = nextQueue.pieces.shift()
         nextQueue.pieces.push(new Tetromino())
-        nextQueue.pieces.forEach((piece, i) => piece.pos = POSITION.NEXT_PIECES[i])
+        nextQueue.pieces.forEach((piece, i) => piece.pos = NEXT.PIECE_POSITION[i])
     }
     nextQueue.draw()
-    matrix.piece.pos = POSITION.FALLING_PIECE
+    matrix.piece.pos = MATRIX.PIECE_POSITION
     if (matrix.spaceToMove(matrix.piece.minoesPos.translate(matrix.piece.pos))){
         scheduler.clearInterval(lockPhase)
         scheduler.setInterval(lockPhase, stats.fallPeriod)
@@ -565,9 +555,9 @@ function lockDown(){
         // Complete lines
         matrix.clearedLines = []
         matrix.lockedMinoes.forEach((row, y) => {
-            if (row.filter(lockedMino => lockedMino.length).length == MATRIX.COLUMNS) {
+            if (row.filter(lockedMino => lockedMino.length).length == matrix.columns) {
                 matrix.lockedMinoes.splice(y, 1)
-                matrix.lockedMinoes.unshift(Array(MATRIX.COLUMNS))
+                matrix.lockedMinoes.unshift(Array(matrix.columns))
                 matrix.clearedLines.push(y)
             }
         })
@@ -602,64 +592,62 @@ function gameOver() {
         localStorage.setItem('highScore', stats.highScore)
         info += "\nBravo ! Vous avez battu votre précédent record."
     }
-
+    
     var retry = 0
-    var XHR = new XMLHttpRequest()
-    var FD  = new FormData()
-    FD.append("score", stats.score)
-    XHR.addEventListener('load', function(event) {
+    var fd  = new FormData()
+    fd.append("score", stats.score)
+    var request = new XMLHttpRequest()
+    request.onload = function(event) {
         if (event.target.responseText == "true") {
-            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 20.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("name") || "")
-            if (player.length) {
+            var player = prompt(info + "\nBravo ! Vous êtes dans le Top 20.\nEntrez votre nom pour publier votre score :" , localStorage.getItem("player") || "")
+            if (player && player.length) {
                 localStorage.setItem("player", player)
-                XHR = new XMLHttpRequest()
-                FD  = new FormData()
-                FD.append("player", player)
-                FD.append("score", stats.score)
-                XHR.addEventListener('load', function(event) {
+                fd.append("player", player)
+                request = new XMLHttpRequest()
+                request.onload = function(event) {
                     open("leaderboard.php")
-                })
-                XHR.addEventListener('error', function(event) {
+                }
+                request.onerror = function(event) {
                     if (confirm('Erreur de connexion.\nRéessayer ?')) {
-                        XHR.open('POST', 'publish.php')
-                        XHR.send(FD)
+                        request.open('POST', 'publish.php')
+                        request.send(fd)
                     }
-                })
-                XHR.open('POST', 'publish.php')
-                XHR.send(FD)
+                }
+                request.open('POST', 'publish.php')
+                request.send(fd)
             }
         } else {
             alert(info)
         }
-    })
-    XHR.addEventListener('error', function(event) {
+    }
+    request.onerror = function(event) {
         retry++
         if (retry < RETRIES) {
-            XHR.open('POST', 'inleaderboard.php')
-            XHR.send(FD)
+            request.open('POST', 'inleaderboard.php')
+            request.send(fd)
         } else
             alert(info)
-    })
-    XHR.open('POST', 'inleaderboard.php')
-    XHR.send(FD)
+    }
+    request.open('POST', 'inleaderboard.php')
+    request.send(fd)
 
     document.getElementById("game").style.display = "grid"
     document.getElementById("settings").style.display = "none"
     document.getElementById("start").style.display = "grid"
-    document.getElementById("settingsButton").style.display = "none"
+    document.getElementById("settingsButton").style.display = "flex"
     document.getElementById("leaderboardLink").style.display = "flex"
 }
 
-function AUTOREPEAT_DELAY() {
+function autorepeat() {
     if (actionsToRepeat.length) {
         actionsToRepeat[0]()
-        if (scheduler.timeoutTasks.has(AUTOREPEAT_DELAY)) {
-            scheduler.clearTimeout(AUTOREPEAT_DELAY)
-            scheduler.setInterval(AUTOREPEAT_DELAY, autorepeatPeriod)
+        if (scheduler.timeoutTasks.has(autorepeat)) {
+            scheduler.clearTimeout(autorepeat)
+            scheduler.setInterval(autorepeat, autorepeatPeriod)
         }
     } else {
-        scheduler.clearTimeout(AUTOREPEAT_DELAY)
-        scheduler.clearInterval(AUTOREPEAT_DELAY)
+        scheduler.clearTimeout(autorepeat)
+        scheduler.clearInterval(autorepeat)
     }
 }
 
@@ -673,12 +661,12 @@ function keyDownHandler(e) {
             action()
             if (REPEATABLE_ACTIONS.includes(action)) {
                 actionsToRepeat.unshift(action)
-                scheduler.clearTimeout(AUTOREPEAT_DELAY)
-                scheduler.clearInterval(AUTOREPEAT_DELAY)
+                scheduler.clearTimeout(autorepeat)
+                scheduler.clearInterval(autorepeat)
                 if (action == softDrop)
-                    scheduler.setInterval(AUTOREPEAT_DELAY, stats.fallPeriod / 20)
+                    scheduler.setInterval(autorepeat, stats.fallPeriod / 20)
                 else
-                    scheduler.setTimeout(AUTOREPEAT_DELAY, autorepeatDelay)
+                    scheduler.setTimeout(autorepeat, autorepeatDelay)
             }
         }
     }
@@ -691,8 +679,8 @@ function keyUpHandler(e) {
         if (actionsToRepeat.includes(action)) {
             actionsToRepeat.splice(actionsToRepeat.indexOf(action), 1)
             if (!actionsToRepeat.length) {
-                scheduler.clearTimeout(AUTOREPEAT_DELAY)
-                scheduler.clearInterval(AUTOREPEAT_DELAY)
+                scheduler.clearTimeout(autorepeat)
+                scheduler.clearInterval(autorepeat)
             }
         }
     }
@@ -742,7 +730,7 @@ function hold() {
         scheduler.clearInterval(lockDown)
         var shape = matrix.piece.shape
         matrix.piece = holdQueue.piece
-        holdQueue.piece = new Tetromino(POSITION.HELD_PIECE, shape)
+        holdQueue.piece = new Tetromino(HOLD.PIECE_POSITION, shape)
         holdQueue.piece.holdEnabled = false
         holdQueue.draw()
         generationPhase(matrix.piece)
@@ -752,10 +740,11 @@ function hold() {
 
 function pause() {
     state = STATE.PAUSED
+    stats.startTime = performance.now() - stats.startTime
     actionsToRepeat = []
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
-    scheduler.clearTimeout(AUTOREPEAT_DELAY)
+    scheduler.clearTimeout(autorepeat)
     scheduler.clearInterval(clock)
     holdQueue.draw()
     matrix.draw()
@@ -766,6 +755,7 @@ function pause() {
 function resume() {
     if (document.getElementById("game").style.display == "grid") {
         state = STATE.PLAYING
+        stats.startTime = performance.now() - stats.startTime
         messageDiv.innerHTML = ""
         scheduler.setInterval(lockPhase, stats.fallPeriod)
         if (matrix.piece.locked)
@@ -795,8 +785,8 @@ function delTempTexts(self) {
     }
 }
 
-function clock() {
-    stats.timeCell.innerText = timeFormat(1000 * ++stats.time)
+function clock(timestamp) {
+        stats.timeCell.innerText = timeFormat(1000 * ++stats.time)
 }
 
 function getKeyName(action) {
@@ -818,7 +808,7 @@ function applySettings() {
     actions[STATE.PAUSED][getKeyName("pause")] = resume
     actions[STATE.GAME_OVER] = {}
 
-    autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.AUTOREPEAT_DELAY
+    autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.autorepeat
     autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || DELAY.AUTOREPEAT_PERIOD
 
     theme = localStorage.getItem("theme") || DEFAULT_THEME
@@ -849,7 +839,7 @@ function showSettings() {
     document.getElementById("set-pause-key"    ).innerHTML = replaceSpace(getKeyName("pause"))
 
     document.getElementById("autorepeatDelayRange").value = autorepeatDelay
-    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai initial : ${autorepeatDelay}ms`
     document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
 
@@ -860,9 +850,24 @@ function showSettings() {
 
     document.getElementById("settings").style.display = "block"
     document.getElementById("game").style.display = "none"
-    document.getElementById("start").style.display = "none"
-    document.getElementById("leaderboardLink").style.display = "none"
     document.getElementById("settingsButton").style.display = "none"
+
+    switch(state) {
+        case STATE.WAITING:
+            document.getElementById("start").style.display = "block"
+            document.getElementById("hideSettingsButton").style.display = "none"
+            document.getElementById("leaderboardLink").style.display = "flex"
+        break
+        case STATE.GAME_OVER:
+            document.getElementById("start").style.display = "block"
+            document.getElementById("hideSettingsButton").style.display = "flex"
+            document.getElementById("leaderboardLink").style.display = "flex"
+        break
+        case STATE.PAUSED:
+            document.getElementById("start").style.display = "none"
+            document.getElementById("hideSettingsButton").style.display = "flex"
+            
+    }
 }
 
 function hideSettings() {
@@ -871,15 +876,15 @@ function hideSettings() {
         case STATE.WAITING:
             document.getElementById("game").style.display = "none"
             document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "grid"
-            document.getElementById("settingsButton").style.display = "none"
+            document.getElementById("start").style.display = "block"
+            document.getElementById("settingsButton").style.display = "flex"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.GAME_OVER:
             document.getElementById("game").style.display = "grid"
             document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "grid"
-            document.getElementById("settingsButton").style.display = "none"
+            document.getElementById("start").style.display = "block"
+            document.getElementById("settingsButton").style.display = "flex"
             document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.PAUSED:
@@ -912,7 +917,7 @@ function changeKey(e) {
 function autorepeatDelayChanged() {
     autorepeatDelay = document.getElementById("autorepeatDelayRange").value
     localStorage.setItem("autorepeatDelay", autorepeatDelay)
-    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai : ${autorepeatDelay}ms`
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai initial : ${autorepeatDelay}ms`
 }
 
 function autorepeatPeriodChanged() {
@@ -960,9 +965,8 @@ window.onload = function() {
     document.getElementById("startLevel").value = localStorage.getItem("startLevel") || 1
 
     document.getElementById("startButton").disabled = false
-    document.getElementById("startButton").focus();
+    document.getElementById("startButton").focus()
     document.getElementById("settingsButton").disabled = false
-    document.getElementById("settingsStartButton").disabled = false
     messageDiv = document.getElementById("message")
 
     scheduler = new Scheduler()
@@ -971,4 +975,6 @@ window.onload = function() {
     matrix = new Matrix()
     nextQueue = new NextQueue()
     themePreview = new ThemePreview()
+
+    showSettings()
 }

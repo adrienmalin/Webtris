@@ -24,17 +24,12 @@
         $score = number_format($row['score'], 0, ",", " ");
         echo '          <tr><th class="name">' . $i . '<td class="player">' . $row['player'] . '</td><td class="value">' . $score . "</td></tr>\n";
     }
-    $top10->closeCursor();
-    $db->close();
+    $top10 = null;
+    $db = null;
 ?>
         </table>
         <div class="flex-container">
-            <div id="button-link">
-                <a href="settings.php" target="_blank">OPTIONS</a>
-            </div>
-            <div id="button-link">
-                <a href="index.php">REJOUER</a>
-            </div>
+            <button onclick="window.close()">Fermer</button>
         </div>
     </body>
 </html>

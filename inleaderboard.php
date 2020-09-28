@@ -12,8 +12,8 @@
             echo "true";
         else
             echo "false";
-        $query->closeCursor();
-        $db->close();
+        $query = null;
+        $db = null;
     } else {
         header($_SERVER["SERVER_PROTOCOL"] . " 405 Method Not Allowed", true, 405);
     }
