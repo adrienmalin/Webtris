@@ -746,6 +746,7 @@ function pause() {
     scheduler.clearTimeout(lockDown)
     scheduler.clearTimeout(autorepeat)
     scheduler.clearInterval(clock)
+    scheduler.clearInterval(delTempTexts)
     holdQueue.draw()
     matrix.draw()
     nextQueue.draw()
@@ -764,6 +765,8 @@ function resume() {
         holdQueue.draw()
         matrix.draw()
         nextQueue.draw()
+        if (tempTexts.length)
+            scheduler.setInterval(delTempTexts, DELAY.MESSAGE)
     }
 }
 

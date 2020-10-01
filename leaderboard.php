@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <title>Meilleurs scores - Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
-        <link rel="stylesheet" type="text/css" href="css/style.css" />
+        <link rel="stylesheet" type="text/css" href="style.css" />
     </head>
     <body>
         <header>
