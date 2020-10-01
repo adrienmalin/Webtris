@@ -4,8 +4,8 @@
         <meta charset="utf-8" />
         <title>Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
-        <link rel="stylesheet" type="text/css" href="css/style.css" />
-        <script type="text/javascript" src="js/webtris.js"></script>
+        <link rel="stylesheet" type="text/css" href="style.css" />
+        <script type="text/javascript" src="webtris.js"></script>
     </head>
     <body>
         <header>
@@ -79,8 +79,8 @@
                 <div></div>
                 <select id="themeSelect" onchange="themeChanged()">
 <?php
-    foreach(scandir("css/themes") as $theme) {
-        if (!in_array($theme,array(".","..")))
+    foreach(scandir("themes") as $theme) {
+        if (pathinfo ($theme, PATHINFO_EXTENSION) == "css")
             echo "                    <option>" . pathinfo($theme, PATHINFO_FILENAME) . "</option>\n";
     }
 ?>

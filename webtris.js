@@ -937,7 +937,7 @@ function loadTheme() {
     link.id   = "theme";
     link.rel  = 'stylesheet'
     link.type = 'text/css'
-    link.href = 'css/themes/' + theme+ '.css'
+    link.href = 'themes/' + theme+ '.css'
     link.media = 'all'
     document.getElementsByTagName('head')[0].appendChild(link);
 }
