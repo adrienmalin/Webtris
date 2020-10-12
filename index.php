@@ -11,7 +11,7 @@
         <header>
             <h1>WEBTRIS</h1>
         </header>
-        <div id="game">
+        <section id="game">
     <?php
         function echoTable($id, $invisibleRows, $visibleRows, $columns) {
             echo "            <table id='$id' class=minoes-table>\n";
@@ -48,14 +48,15 @@
                 <tr><th class="name">LIGNES</th><td class="value" id="clearedLines">0</td></tr>
             </table>
             <div id="message"></div>
-        </div>
-        <div id="settings">
+        </section>
+        <section id="settings">
             <fieldset id="keyboard">
                 <legend>Clavier</legend>
+                <div class="settings">
     <?php
         function addButton($action, $label) {
-            echo "                <label for='set-$action-key'>$label</label>\n";
-            echo "                <button id='set-$action-key' type='button' onclick=\"waitKey(this, '$action')\">...</button>";
+            echo "                    <label for='set-$action-key'>$label</label>\n";
+            echo "                    <button id='set-$action-key' type='button' onclick=\"waitKey(this, '$action')\">...</button>";
         }
         addButton("moveLeft", "Gauche");
         addButton("moveRight", "Droite");
@@ -66,49 +67,56 @@
         addButton("hold", "Garde");
         addButton("pause", "Pause/Reprise");
     ?>
+                </div>
             </fieldset>
             <fieldset>
                 <legend>Répétition automatique</legend>
-                <label id="autorepeatDelayRangeLabel" for="autorepeatDelayRange">Délai initial</label>
-                <input id="autorepeatDelayRange" type="range" oninput="autorepeatDelayChanged()" min="100" max="1000" step="10" />
-                <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange">Période</label>
-                <input id="autorepeatPeriodRange" type="range" id="autorepeatPeriodRange" oninput="autorepeatPeriodChanged()" min="2" max="50" step="2" />
+                <div>
+                    <label id="autorepeatDelayRangeLabel" for="autorepeatDelayRange">Délai initial</label>
+                    <input id="autorepeatDelayRange" type="range" oninput="autorepeatDelayChanged()" min="100" max="1000" step="10" />
+                    <label id="autorepeatPeriodRangeLabel" for="autorepeatPeriodRange">Période</label>
+                    <input id="autorepeatPeriodRange" type="range" id="autorepeatPeriodRange" oninput="autorepeatPeriodChanged()" min="2" max="50" step="2" />
+                </div>
             </fieldset>
             <fieldset>
                 <legend>Thème</legend>
-                <div></div>
-                <select id="themeSelect" onchange="themeChanged()">
+                <div>
+                    <div></div>
+                    <select id="themeSelect" onchange="themeChanged()">
 <?php
     foreach(scandir("themes") as $theme) {
         if (pathinfo ($theme, PATHINFO_EXTENSION) == "css")
-            echo "                    <option>" . pathinfo($theme, PATHINFO_FILENAME) . "</option>\n";
+            echo "                        <option>" . pathinfo($theme, PATHINFO_FILENAME) . "</option>\n";
     }
 ?>
-                </select>
+                    </select>
 <?php
     echoTable("themePreview",   2,  0,  3);
 ?>
-            <div id="showGhostDiv">
-                <input id="showGhostCheckbox" type="checkbox" checked onchange="showGhostChanged()"/>
-                <label for="showGhostCheckbox">Afficher le fantôme</label>
-            </div>
+                    <div id="showGhostDiv">
+                        <input id="showGhostCheckbox" type="checkbox" checked onchange="showGhostChanged()"/>
+                        <label for="showGhostCheckbox">Afficher le fantôme</label>
+                    </div>
+                </div>
             </fieldset>
             <button id="hideSettingsButton" type="button" onclick="hideSettings()">RETOUR</button>
-        </div>
-        <div id="start">
+        </section>
+        <section id="start">
             <fieldset>
                 <legend>Nouvelle partie</legend>
-                <label for="startLevel">Niveau</label>
-                <input type="number" id="startLevel" min="1" max="15" step="1">
-                <div></div>
-                <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+                <div>
+                    <label for="startLevel">Niveau</label>
+                    <input type="number" id="startLevel" min="1" max="15" step="1">
+                    <div></div>
+                    <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+                </div>
             </fieldset>
-        </div>
-        <div>
+        </section>
+        <section>
             <button id="settingsButton" type="button" onclick="showSettings()" disabled>OPTIONS</button>
-        </div>
-        <div id="leaderboardLink">
+        </section>
+        <footer id="leaderboardLink">
             <a href="leaderboard.php" target="_blank">TABLEAU DE SCORE</a>
-        </div>
+        </footer>
     </body>
 </html>
