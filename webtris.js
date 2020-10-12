@@ -814,7 +814,7 @@ function applySettings() {
     autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.autorepeat
     autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || DELAY.AUTOREPEAT_PERIOD
 
-    theme = localStorage.getItem("theme") || DEFAULT_THEME
+    themeName = localStorage.getItem("themeName") || DEFAULT_THEME
     loadTheme()
 
     showGhost = localStorage.getItem("showGhost")
@@ -846,7 +846,7 @@ function showSettings() {
     document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
     document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
 
-    document.getElementById("themeSelect").value=theme;
+    document.getElementById("themeSelect").value=themeName;
     themePreview.drawPiece(themePreview.piece)
 
     document.getElementById("showGhostCheckbox").checked = showGhost
@@ -930,19 +930,21 @@ function autorepeatPeriodChanged() {
 }
 
 function themeChanged() {
-    theme = document.getElementById("themeSelect").value
-    localStorage.setItem("theme", theme)
+    themeName = document.getElementById("themeSelect").value
+    localStorage.setItem("themeName", themeName)
     loadTheme()
 }
 
 function loadTheme() {
+    theme = document.getElementById("theme")
+    if (theme) document.head.removeChild(theme)
     var link  = document.createElement('link')
     link.id   = "theme";
     link.rel  = 'stylesheet'
     link.type = 'text/css'
-    link.href = 'themes/' + theme+ '.css'
+    link.href = 'themes/' + themeName+ '.css'
     link.media = 'all'
-    document.getElementsByTagName('head')[0].appendChild(link);
+    document.head.appendChild(link);
 }
 
 function showGhostChanged() {
