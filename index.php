@@ -106,9 +106,9 @@
                 <legend>Nouvelle partie</legend>
                 <div>
                     <label for="startLevel">Niveau</label>
-                    <input type="number" id="startLevel" min="1" max="15" step="1">
+                    <input type="number" id="startLevelInput" min="1" max="15" step="1">
                     <div></div>
-                    <button id="startButton" type="button" onclick="newGame()" disabled>JOUER</button>
+                    <button id="startButton" type="button" onclick="newGame(startLevelInput.value)" disabled>JOUER</button>
                 </div>
             </fieldset>
         </section>

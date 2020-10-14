@@ -377,10 +377,8 @@ class Stats {
     }
 
     newLevel(level=null) {
-        if (level)
-            this.level = level
-        else
-            this.level++
+        this.level = level || this.level + 1
+        location.hash = "#" + this.level
         this.levelCell.innerText = this.level
         printTempTexts(`NIVEAU<br/>${this.level}`)
         this.goal += 5 * this.level
@@ -429,7 +427,7 @@ class Stats {
 
 
 // Functions
-function newGame() {
+function newGame(startLevel=startLevelInput) {
     document.getElementById("startButton").blur()
 
     holdQueue.newGame()
@@ -437,7 +435,6 @@ function newGame() {
     nextQueue.newGame()
     stats.newGame()
     
-    var startLevel = document.getElementById("startLevel").value
     localStorage.setItem("startLevel", startLevel)
 
     document.getElementById("game").style.display = "grid"
@@ -455,8 +452,8 @@ function newGame() {
     newLevel(startLevel)
 }
 
-function newLevel(startLevel) {
-    stats.newLevel(startLevel)
+function newLevel(level) {
+    stats.newLevel(level)
     generationPhase()
 }
 
@@ -967,7 +964,7 @@ selectedAction = ""
 window.onload = function() {
     applySettings()
 
-    document.getElementById("startLevel").value = localStorage.getItem("startLevel") || 1
+    document.getElementById("startLevelInput").value = localStorage.getItem("startLevel") || 1
 
     document.getElementById("startButton").disabled = false
     document.getElementById("startButton").focus()
@@ -980,6 +977,7 @@ window.onload = function() {
     matrix = new Matrix()
     nextQueue = new NextQueue()
     themePreview = new ThemePreview()
-
-    showSettings()
+    
+    if (location.hash) newGame(Math.min(location.hash.slice(1), 15))
+    else showSettings()
 }
