@@ -39,7 +39,7 @@ const CLASSNAME = {
 const DELAY = {
     LOCK: 500,
     FALL: 1000,
-    autorepeat: 300,
+    AUTOREPEAT: 300,
     AUTOREPEAT_PERIOD: 10,
     ANIMATION: 100,
     MESSAGE: 700
@@ -195,7 +195,7 @@ class Tetromino {
                 this.minoesPos = [[-1, -1], [0, -1], [0, 0], [1, 0]]
             break
         }
-        this.className = CLASSNAME.MINO + " " + this.shape + "-" + CLASSNAME.MINO
+        this.className = CLASSNAME.MINO + " " + this.shape
     }
         
     get minoesAbsPos() {
@@ -237,7 +237,7 @@ class MinoesTable {
 
 class HoldQueue extends MinoesTable {
     constructor() {
-        super("hold")
+        super("holdTable")
     }
 
     newGame() {
@@ -254,7 +254,7 @@ class HoldQueue extends MinoesTable {
 
 class Matrix extends MinoesTable {
     constructor() {
-        super("matrix")
+        super("matrixTable")
     }
 
     newGame() {
@@ -314,7 +314,7 @@ class Matrix extends MinoesTable {
 
 class NextQueue extends MinoesTable {
     constructor() {
-        super("next")
+        super("nextTable")
     }
 
     newGame() {
@@ -332,7 +332,7 @@ class NextQueue extends MinoesTable {
 
 class ThemePreview extends MinoesTable {
     constructor() {
-        super("themePreview")
+        super("themePreviewTable")
         this.piece = new Tetromino(THEME.PIECE_POSITION, "T")
     }
 }
@@ -378,7 +378,7 @@ class Stats {
 
     newLevel(level=null) {
         this.level = level || this.level + 1
-        location.hash = "#" + this.level
+        location.hash = "#level" + this.level
         this.levelCell.innerText = this.level
         printTempTexts(`NIVEAU<br/>${this.level}`)
         this.goal += 5 * this.level
@@ -427,8 +427,8 @@ class Stats {
 
 
 // Functions
-function newGame(startLevel=startLevelInput) {
-    document.getElementById("startButton").blur()
+function newGame(startLevel) {
+    startButton.blur()
 
     holdQueue.newGame()
     matrix.newGame()
@@ -437,11 +437,10 @@ function newGame(startLevel=startLevelInput) {
     
     localStorage.setItem("startLevel", startLevel)
 
-    document.getElementById("game").style.display = "grid"
-    document.getElementById("settings").style.display = "none"
-    document.getElementById("settingsButton").style.display = "flex"
-    document.getElementById("start").style.display = "none"
-    document.getElementById("leaderboardLink").style.display = "none"
+    startSection.style.display = "none"
+    gameSection.style.display = "block"
+    settingsSection.style.display = "none"
+    leaderboardLinkSection.style.display = "none"
 
     state = STATE.PLAYING
     pressedKeys = new Set()
@@ -577,7 +576,7 @@ function clearLinesCleared() {
 
 function gameOver() {
     state = STATE.GAME_OVER
-    messageDiv.innerHTML = "GAME<br/>OVER"
+    messageSpan.innerHTML = "GAME<br/>OVER"
     scheduler.clearInterval(lockPhase)
     scheduler.clearTimeout(lockDown)
     scheduler.clearInterval(clock)
@@ -627,12 +626,13 @@ function gameOver() {
     }
     request.open('POST', 'inleaderboard.php')
     request.send(fd)
+    
+    location.hash = "#game-over"
 
-    document.getElementById("game").style.display = "grid"
-    document.getElementById("settings").style.display = "none"
-    document.getElementById("start").style.display = "grid"
-    document.getElementById("settingsButton").style.display = "flex"
-    document.getElementById("leaderboardLink").style.display = "flex"
+    startSection.style.display = "block"
+    gameSection.style.display = "block"
+    settingsSection.style.display = "none"
+    leaderboardLinkSection.style.display = "block"
 }
 
 function autorepeat() {
@@ -737,6 +737,7 @@ function hold() {
 
 function pause() {
     state = STATE.PAUSED
+    location.hash = "#pause"
     stats.startTime = performance.now() - stats.startTime
     actionsToRepeat = []
     scheduler.clearInterval(lockPhase)
@@ -747,29 +748,32 @@ function pause() {
     holdQueue.draw()
     matrix.draw()
     nextQueue.draw()
-    messageDiv.innerHTML = `PAUSE<br/><br/>Appuyez sur<br/>${getKeyName('pause')}<br/>pour reprendre`
+    gameSection.style.display = "none"
+    settingsSection.style.display = "block"
 }
 
 function resume() {
-    if (document.getElementById("game").style.display == "grid") {
-        state = STATE.PLAYING
-        stats.startTime = performance.now() - stats.startTime
-        messageDiv.innerHTML = ""
-        scheduler.setInterval(lockPhase, stats.fallPeriod)
-        if (matrix.piece.locked)
-            scheduler.setTimeout(lockDown, stats.lockDelay)
-        scheduler.setInterval(clock, 1000)
-        holdQueue.draw()
-        matrix.draw()
-        nextQueue.draw()
-        if (tempTexts.length)
-            scheduler.setInterval(delTempTexts, DELAY.MESSAGE)
-    }
+    applySettings()
+    settingsSection.style.display = "none"
+    gameSection.style.display = "block"
+    location.hash = "#level" + stats.level
+    state = STATE.PLAYING
+    stats.startTime = performance.now() - stats.startTime
+    messageSpan.innerHTML = ""
+    scheduler.setInterval(lockPhase, stats.fallPeriod)
+    if (matrix.piece.locked)
+        scheduler.setTimeout(lockDown, stats.lockDelay)
+    scheduler.setInterval(clock, 1000)
+    holdQueue.draw()
+    matrix.draw()
+    nextQueue.draw()
+    if (tempTexts.length)
+        scheduler.setInterval(delTempTexts, DELAY.MESSAGE)
 }
 
 function printTempTexts(text) {
     tempTexts.push(text)
-    messageDiv.innerHTML = tempTexts[0]
+    messageSpan.innerHTML = tempTexts[0]
     if (!scheduler.intervalTasks.has(delTempTexts))
         scheduler.setInterval(delTempTexts, DELAY.MESSAGE)
 }
@@ -778,10 +782,10 @@ function delTempTexts(self) {
     if (tempTexts.length) 
         tempTexts.shift()
     if (tempTexts.length) 
-        messageDiv.innerHTML = tempTexts[0]
+        messageSpan.innerHTML = tempTexts[0]
     else {
         scheduler.clearInterval(delTempTexts)
-        messageDiv.innerHTML = ""
+        messageSpan.innerHTML = ""
     }
 }
 
@@ -808,7 +812,7 @@ function applySettings() {
     actions[STATE.PAUSED][getKeyName("pause")] = resume
     actions[STATE.GAME_OVER] = {}
 
-    autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.autorepeat
+    autorepeatDelay = localStorage.getItem("autorepeatDelay") || DELAY.AUTOREPEAT
     autorepeatPeriod = localStorage.getItem("autorepeatPeriod") || DELAY.AUTOREPEAT_PERIOD
 
     themeName = localStorage.getItem("themeName") || DEFAULT_THEME
@@ -825,76 +829,48 @@ function replaceSpace(key) {
     return (key == " ") ? "Space" : key
 }
 
-function showSettings() {
+function loadSettings() {
     if (state == STATE.PLAYING)
         pause()
 
-    document.getElementById("set-moveLeft-key" ).innerHTML = replaceSpace(getKeyName("moveLeft"))
-    document.getElementById("set-moveRight-key").innerHTML = replaceSpace(getKeyName("moveRight"))
-    document.getElementById("set-softDrop-key" ).innerHTML = replaceSpace(getKeyName("softDrop"))
-    document.getElementById("set-hardDrop-key" ).innerHTML = replaceSpace(getKeyName("hardDrop"))
-    document.getElementById("set-rotateCW-key" ).innerHTML = replaceSpace(getKeyName("rotateCW"))
-    document.getElementById("set-rotateCCW-key").innerHTML = replaceSpace(getKeyName("rotateCCW"))
-    document.getElementById("set-hold-key"     ).innerHTML = replaceSpace(getKeyName("hold"))
-    document.getElementById("set-pause-key"    ).innerHTML = replaceSpace(getKeyName("pause"))
+    moveLeftSetKeyButton.innerHTML = replaceSpace(getKeyName("moveLeft"))
+    moveRightSetKeyButton.innerHTML = replaceSpace(getKeyName("moveRight"))
+    softDropSetKeyButton.innerHTML = replaceSpace(getKeyName("softDrop"))
+    hardDropSetKeyButton.innerHTML = replaceSpace(getKeyName("hardDrop"))
+    rotateCWSetKeyButton.innerHTML = replaceSpace(getKeyName("rotateCW"))
+    rotateCCWSetKeyButton.innerHTML = replaceSpace(getKeyName("rotateCCW"))
+    holdSetKeyButton.innerHTML = replaceSpace(getKeyName("hold"))
+    pauseSetKeyButton.innerHTML = replaceSpace(getKeyName("pause"))
 
-    document.getElementById("autorepeatDelayRange").value = autorepeatDelay
-    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai initial : ${autorepeatDelay}ms`
-    document.getElementById("autorepeatPeriodRange").value = autorepeatPeriod
-    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+    autorepeatDelayRange.value = autorepeatDelay
+    autorepeatDelayRangeLabel.innerText = `Délai initial : ${autorepeatDelay}ms`
+    autorepeatPeriodRange.value = autorepeatPeriod
+    autorepeatPeriodRangeLabel.innerText = `Période : ${autorepeatPeriod}ms`
 
-    document.getElementById("themeSelect").value=themeName;
+    themeSelect.value=themeName;
     themePreview.drawPiece(themePreview.piece)
 
-    document.getElementById("showGhostCheckbox").checked = showGhost
+    showGhostCheckbox.checked = showGhost
 
-    document.getElementById("settings").style.display = "block"
-    document.getElementById("game").style.display = "none"
-    document.getElementById("settingsButton").style.display = "none"
+    /*startSection.style.display = "grid"
+    gameSection.style.display = "grid"
+    settingsSection.style.display = "block"
+    settingsButtonSection.style.display = "flex"
 
     switch(state) {
         case STATE.WAITING:
             document.getElementById("start").style.display = "block"
             document.getElementById("hideSettingsButton").style.display = "none"
-            document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.GAME_OVER:
             document.getElementById("start").style.display = "block"
             document.getElementById("hideSettingsButton").style.display = "flex"
-            document.getElementById("leaderboardLink").style.display = "flex"
         break
         case STATE.PAUSED:
             document.getElementById("start").style.display = "none"
             document.getElementById("hideSettingsButton").style.display = "flex"
             
-    }
-}
-
-function hideSettings() {
-    applySettings()
-    switch(state) {
-        case STATE.WAITING:
-            document.getElementById("game").style.display = "none"
-            document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "block"
-            document.getElementById("settingsButton").style.display = "flex"
-            document.getElementById("leaderboardLink").style.display = "flex"
-        break
-        case STATE.GAME_OVER:
-            document.getElementById("game").style.display = "grid"
-            document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "block"
-            document.getElementById("settingsButton").style.display = "flex"
-            document.getElementById("leaderboardLink").style.display = "flex"
-        break
-        case STATE.PAUSED:
-            document.getElementById("game").style.display = "grid"
-            document.getElementById("settings").style.display = "none"
-            document.getElementById("start").style.display = "none"
-            document.getElementById("settingsButton").style.display = "flex"
-            document.getElementById("leaderboardLink").style.display = "none"
-        break
-    }
+    }*/
 }
 
 function waitKey(button, action) {
@@ -915,15 +891,13 @@ function changeKey(e) {
 }
 
 function autorepeatDelayChanged() {
-    autorepeatDelay = document.getElementById("autorepeatDelayRange").value
-    localStorage.setItem("autorepeatDelay", autorepeatDelay)
-    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai initial : ${autorepeatDelay}ms`
+    localStorage.setItem("autorepeatDelay", autorepeatDelayRange.value)
+    document.getElementById("autorepeatDelayRangeLabel").innerText = `Délai initial : ${autorepeatDelayRange.value}ms`
 }
 
 function autorepeatPeriodChanged() {
-    autorepeatPeriod = document.getElementById("autorepeatPeriodRange").value
-    localStorage.setItem("autorepeatPeriod", autorepeatPeriod)
-    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriod}ms`
+    localStorage.setItem("autorepeatPeriod", autorepeatPeriodRange.value)
+    document.getElementById("autorepeatPeriodRangeLabel").innerText = `Période : ${autorepeatPeriodRange.value}ms`
 }
 
 function themeChanged() {
@@ -939,13 +913,13 @@ function loadTheme() {
     link.id   = "theme";
     link.rel  = 'stylesheet'
     link.type = 'text/css'
-    link.href = 'themes/' + themeName+ '.css'
+    link.href = 'themes/' + themeName+ '/style.css'
     link.media = 'all'
     document.head.appendChild(link);
 }
 
 function showGhostChanged() {
-    showGhost = (document.getElementById("showGhostCheckbox").checked == true)
+    showGhost = (showGhostCheckbox.checked == true)
     localStorage.setItem("showGhost", showGhost)
 }
 
@@ -962,14 +936,9 @@ selectedButton = null
 selectedAction = ""
 
 window.onload = function() {
-    applySettings()
-
-    document.getElementById("startLevelInput").value = localStorage.getItem("startLevel") || 1
-
-    document.getElementById("startButton").disabled = false
-    document.getElementById("startButton").focus()
-    document.getElementById("settingsButton").disabled = false
-    messageDiv = document.getElementById("message")
+    location.hash = ""
+    
+    startLevelInput.value = localStorage.getItem("startLevel") || 1
 
     scheduler = new Scheduler()
     holdQueue = new HoldQueue()
@@ -978,6 +947,9 @@ window.onload = function() {
     nextQueue = new NextQueue()
     themePreview = new ThemePreview()
     
-    if (location.hash) newGame(Math.min(location.hash.slice(1), 15))
-    else showSettings()
+    applySettings()
+    loadSettings()
+    
+    startButton.disabled = false
+    startButton.focus()
 }

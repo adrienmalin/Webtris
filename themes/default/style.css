@@ -1,0 +1,181 @@
+body {
+    font-family: sans-serif;
+    color: white;
+    background: #222;
+}
+
+section {
+    margin: 1em;
+}
+
+div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+fieldset > div {
+    display: grid;
+    grid-template-columns: 3fr 2fr 3fr 2fr;
+    grid-column-gap: 2em;
+    grid-row-gap: 1em;
+    justify-items: right;
+    align-items: center;
+}
+
+fieldset button, input {
+    width: 100%;
+}
+
+label {
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: lightblue;
+}
+
+#gameSection {
+    width: 72vmin;
+    grid-template-columns: 18vmin 30vmin 18vmin;
+    grid-gap: 3vmin;
+    margin: auto;
+}
+
+#gameSection div {
+    display: grid;
+}
+
+#holdTable {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+}
+
+#statsTable {
+    grid-column: 1;
+    grid-row: 3;
+    height: 0;
+    justify-self: end;
+    margin: 0 auto;
+}
+
+#scoreTable {
+    font-weight: bold;
+}
+
+#matrixTable {
+    grid-column: 2;
+    grid-row: 1 / 4;
+}
+
+#messageSpan {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 4vmin;
+    text-shadow: 1px 1px rgba(0, 0, 0, 0.8);
+    text-align: center;
+    font-weight: bold;
+}
+
+#nextTable {
+    grid-column: 3;
+    grid-row: 1 / 4;
+}
+
+
+.minoes-table {
+    table-layout: fixed;
+    border-spacing: 0;
+    margin: auto;
+}
+
+.minoes-table tr {
+    height: 3vmin;
+}
+
+.minoes-table th, td {
+    font-weight: normal;
+    padding: 0;
+    height: 3vmin;
+    width: 3vmin;
+    border: 1px solid transparent;
+}
+
+.minoes-table th {
+    border: 1px solid transparent;
+}
+
+.minoes-table td {
+    border: 1px solid #888;
+}
+
+.minoes-table .mino {
+    border: 1px solid;
+    border-radius: 1px;
+}
+
+.minoes-table .I {
+    /* cyan */
+    background: #99d9ea;
+    border-color: #d1edf5;
+}
+
+.minoes-table .J {
+    /* blue */
+    background: #7f92ff;
+    border-color: #c2cbff;
+}
+
+.minoes-table .L {
+    /* orange */
+    background: #ffb27f;
+    border-color: #ffe1cd;
+}
+
+.minoes-table .O {
+    /* yellow */
+    background: #ffe97f;
+    border-color: #fff5ca;
+}
+
+.minoes-table .S {
+    /* green */
+    background: #7fff8e;
+    border-color: #ccffd2;
+}
+
+.minoes-table .T {
+    /* magenta */
+    background: #d67fff;
+    border-color: #edc9ff;
+}
+
+.minoes-table .Z {
+    /* red */
+    background: #ff7f7f;
+    border-color: #ffdada;
+}
+
+.locked, .cleared-line {
+    background: white;
+    border: 1px solid white;
+    border-radius: 1px;
+}
+
+.trail {
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid white;
+    border-radius: 1px;
+}
+
+.ghost {
+    background: rgba(255, 255, 255, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 1px;
+}
+
