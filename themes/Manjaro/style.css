@@ -1,6 +1,8 @@
 body {
     margin: 0;
-    font-family: sans-serif;
+    font-family: open sans,sans-serif;
+    font-size: 14px;
+    letter-spacing: .01em;
     color: white;
     background: #222;
     width: 100%;
@@ -26,7 +28,8 @@ div {
 }
 
 fieldset {
-    border: 1px solid #444;
+    border: 0;
+    font-size: 14px;
 }
 
 legend {

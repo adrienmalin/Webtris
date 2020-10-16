@@ -1,0 +1,289 @@
+/* source: https://github.com/kubowania/Tetris */
+
+:root {
+    /* default font size in browsers is 16px = 1em, we make
+     things easier for us and make 10px our base size.
+     We have 10/16 = 0.625 = 1rem as it is set on root element.
+     So 1rem is now 10px throughout our stylesheet.*/
+    font-size: 0.625em;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Montserrat", sans-serif;
+    font-size: 1.6rem;
+    margin: auto;
+    max-width: 60rem;
+    color: #d8edea;
+    background: radial-gradient(
+        circle,
+        rgba(175, 196, 174, 1) 0%,
+        rgba(104, 204, 191, 1) 89%,
+        rgba(94, 191, 178, 1) 100%
+    );
+}
+
+h1 {
+    text-align: center;
+    margin: 1rem;
+    letter-spacing: 1.5rem;
+}
+
+section {
+    margin: 1em;
+}
+
+div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#settingsSection {
+    width: auto;
+}
+
+fieldset, #statsTable {
+    margin-top: 1rem;
+    background: #f0f0f0;
+    background-image: linear-gradient(#d0d0d0, #f0f0f0);
+    border: 0;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) inset, 0 1px 0 #fff;
+    color: #85796b;
+}
+
+legend {
+    font-size: 0.9em;
+    color: #d8edea;
+    transform: translate(0, -0.6em);
+}
+
+fieldset > div {
+    display: grid;
+    grid-template-columns: 3fr 2fr 3fr 2fr;
+    grid-column-gap: 1em;
+    grid-row-gap: 1em;
+    justify-items: right;
+    align-items: center;
+}
+
+fieldset > div > * {
+    width: 100%;
+}
+
+label {
+    text-align: right;
+}
+
+button,
+input[type="number"],
+select {
+    text-transform: uppercase;
+    position: relative;
+    width: 22rem;
+    height: 2.2rem;
+    text-align: center;
+    color: #fff;
+    letter-spacing: 1px;
+    text-decoration: none;
+    line-height: 23px;
+    font-size: 10px;
+    display: block;
+    text-shadow: -1px -1px 0 #a84155;
+    background: #d25068;
+    border: 1px solid #d25068;
+    width: 12rem;
+    background-image: linear-gradient(to bottom, #f66c7b, #d25068);
+    border-radius: 5px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.1) inset, 0 4px 0 #ad4257,
+    0 4px 2px rgba(0, 0, 0, 0.5);
+}
+
+button:before,
+input[type="number"]:before,
+select:before {
+    background: #f0f0f0;
+    background-image: linear-gradient(#d0d0d0, #f0f0f0);
+    border-radius: 5px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) inset, 0 1px 0 #fff;
+    position: absolute;
+    content: "";
+    left: -6px;
+    right: -6px;
+    top: -6px;
+    bottom: -10px;
+    z-index: -1;
+}
+
+button:active,
+select:active {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset,
+    0 -1px 0 rgba(255, 255, 255, 0.1) inset;
+    top: 5px;
+}
+
+button:active:before,
+input[type="number"]:active:before,
+select:active:before {
+    top: -11px;
+    bottom: -5px;
+    content: "";
+}
+
+button:hover,
+input[type="number"]:hover,
+select:hover {
+    background: #f66c7b;
+    background-image: linear-gradient(top, #d25068, #f66c7b);
+}
+
+#themePreviewTable {
+    grid-column: 3 / 5;
+    width: auto;
+}
+
+fieldset input[type="checkbox"] {
+    width: auto;
+}
+
+#showGhostDiv {
+    grid-row: 2;
+    grid-column: 1/5;
+    width: 100%;
+}
+
+#gameSection div {
+    display: grid;
+    grid-gap: 3vmin;
+}
+
+#holdTable {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: end;
+}
+
+#matrixTable {
+    grid-column: 2;
+    grid-row: 1 / 4;
+}
+
+#messageSpan {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 4vmin;
+    text-align: center;
+    text-shadow: 1px 1px rgba(153, 145, 175, 0.5);
+}
+
+#nextTable {
+    grid-column: 3;
+    grid-row: 1 / 4;
+}
+
+
+.minoes-table {
+    table-layout: fixed;
+    border-spacing: 0;
+    margin: auto;
+}
+
+th, td {
+    font-weight: normal;
+    padding: 0;
+    height: 2rem;
+    width: 2rem;
+    background: transparent;
+    border: 0;
+}
+
+.I {
+    background-image: url(images/blue_block.png);
+}
+
+.J {
+    background-image: url(images/navy_block.png);
+}
+
+.L {
+    background-image: url(images/peach_block.png);
+}
+
+.O {
+    background-image: url(images/yellow_block.png);
+}
+
+.S {
+    background-image: url(images/green_block.png);
+}
+
+.T {
+    background-image: url(images/purple_block.png);
+}
+
+.Z {
+    background-image: url(images/pink_block.png);
+}
+
+.locked {
+    background: #f0f0f0;
+    border: 3px outset rgba(255, 255, 255, 0.2);
+}
+
+.cleared-line {
+    background: white;
+}
+
+.trail {
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 3px solid rgba(255, 255, 255, 0.2) !important;
+  border-right: 3px solid rgba(125, 125, 125, 0.2) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.ghost {
+  border: 3px outset rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#statsTable {
+    grid-column: 1;
+    grid-row: 2;
+    color: rgb(133, 121, 107, 0.5);
+    padding-top: 1rem;
+    font-size: 1.2rem;
+}
+
+#statsTable td {
+    text-align: center;
+    border: 0; 
+    font-size: 2.3rem;
+    color: rgb(133, 121, 107, 0.5);
+}
+
+footer {
+    position: absolute;
+    left: 50%;
+    bottom: 1em;
+    transform: translateX(-50%);
+}
+
+a {
+    text-decoration: none;
+    color: lightblue;
+}
+
+#credits {
+    font-size: 0.8em;
+    gap: 0.8em;
+}
