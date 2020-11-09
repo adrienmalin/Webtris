@@ -441,6 +441,7 @@ function newGame(startLevel) {
     startSection.style.display = "none"
     gameSection.style.display = "block"
     settingsSection.style.display = "none"
+    footer.style.display = "none"
 
     state = STATE.PLAYING
     pressedKeys = new Set()
@@ -631,6 +632,7 @@ function gameOver() {
     startSection.style.display = "block"
     gameSection.style.display = "block"
     settingsSection.style.display = "none"
+    footer.style.display = "block"
 }
 
 function autorepeat() {
