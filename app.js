@@ -348,6 +348,7 @@ class Stats {
         this.combo = -1
         this.lockDelay = DELAY.LOCK
         this.fallPeriod = DELAY.FALL
+        this.b2bSequence = false
     }
 
     get score() {
@@ -379,7 +380,8 @@ class Stats {
     lockDown(tSpin, clearedLines) {
         var patternName = []
         var patternScore = 0
-        var combo_score = 0
+        var b2bScore = 0
+        var comboScore = 0
         
         if (tSpin)
             patternName.push(tSpin)
@@ -397,18 +399,30 @@ class Stats {
             this.goalCell.innerText = this.goal
             patternName = patternName.join("\n")
         }
-        if (this.combo >= 1)
-            combo_score = (clearedLines == 1 ? 20 : 50) * this.combo * this.level
 
-        if (patternScore || combo_score)
-            this.score += patternScore + combo_score
+        if (this.b2bSequence) {
+            if ((clearedLines == 4) || (tSpin && clearedLines)) {
+                    b2bScore = patternScore / 2
+            } else if ((0 < clearedLines) && (clearedLines < 4) && !tSpin) {
+                this.b2bSequence = false
+            }
+        } else if ((clearedLines == 4) || (tSpin && clearedLines)) {
+            this.b2bSequence = true
+        }
+
+        if (this.combo >= 1)
+            comboScore = (clearedLines == 1 ? 20 : 50) * this.combo * this.level
 
         if (patternScore) {
             var messages = [patternName, patternScore]
-            if (combo_score)
-                messages.push(`COMBO x${this.combo}`, combo_score)
-                printTempTexts(messages.join("<br/>"))
+            if (b2bScore)
+                messages.push(`BACK TO BACK BONUS`, b2bScore)
+            if (comboScore)
+                messages.push(`COMBO x${this.combo}`, comboScore)
+            printTempTexts(messages.join("<br/>"))
         }
+
+        this.score += patternScore + comboScore + b2bScore
     }
 }
 
