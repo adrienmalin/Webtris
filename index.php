@@ -15,7 +15,7 @@
         for ($y = 0; $y < $invisibleRows; $y++) {
             echo "                    <tr>";
             for ($x = 0; $x < $columns; $x++) {
-                echo "<th class=empty-cell></td>";
+                echo "<th></td>";
             }
             echo "</tr>\n";
         }
@@ -35,44 +35,11 @@
         <meta charset="utf-8" />
         <title>Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
-        <link id="theme" rel="stylesheet" type="text/css" href="themes/default/style.css" />
-        <script type="text/javascript" src="webtris.js"></script>
+        <script type="text/javascript" src="app.js"></script>
     </head>
     <body>
-        <section id="gameSection" style="display: none">
-            <div>
-<?php
-    echoTable("holdTable",   6,  0,  6);
-    echoTable("matrixTable", 4, 20, 10);
-    echoTable("nextTable",  24,  0,  6);
-?>
-                <table id="statsTable">
-                    <tr><th class="name" colspan=2>SCORE</th></tr>
-                    <tr><td class="value" id="score" colspan=2>0</td></tr>
-                    <tr><th class="name" colspan=2>RECORD</th></tr>
-                    <tr><td class="value" id="highScore" colspan=2>0</td></tr>
-                    <tr><th class="name" colspan=2>TEMPS</th></tr>
-                    <tr><td class="value" id="time" colspan=2>00:00</td></tr>
-                    <tr><td colspan=2><br/></td class="name"></tr>
-                    <tr><th class="name">NIVEAU</th><td class="value" id="level">0</td></tr>
-                    <tr><th class="name">OBJECTIF</th><td class="value" id="goal">0</td></tr>
-                    <tr><th class="name">LIGNES</th><td class="value" id="clearedLines">0</td></tr>
-                </table>
-                <span id="messageSpan"></span>
-            </div>
-        </section>
-        <section id="startSection">
-            <fieldset>
-                <legend>Nouvelle partie</legend>
-                <div>
-                    <div></div>
-                    <button id="startButton" type="button" onclick="newGame(Number(startLevelInput.value))" disabled>JOUER</button>
-                    <label for="startLevel">Niveau</label>
-                    <input type="number" id="startLevelInput" min="1" max="15" step="1">
-                </div>
-            </fieldset>
-        </section>
         <section id="settingsSection">
+            <h1>WEBTRIS</h1>
             <fieldset>
                 <legend>Clavier</legend>
                 <div>
@@ -107,19 +74,97 @@
     }
 ?>
                     </select>
-<?php
-    echoTable("themePreviewTable",   2,  0,  3);
-?>
-                    <div>
+                    <table id="themePreviewTable" class=minoes-table>
+                        <tr>
+                            <th class="mino I"></th>
+                            <th></th>
+                            <th class="mino J"></th>
+                            <th class="mino J"></th>
+                            <th class="mino J"></th>
+                            <th></th>
+                            <th class="mino S"></th>
+                            <th></th>
+                        </tr>
+                        <tr>
+                            <th class="mino I"></th>
+                            <th class="mino O"></th>
+                            <th class="mino O"></th>
+                            <th></th>
+                            <th class="mino J"></th>
+                            <th class="mino Z"></th>
+                            <th class="mino S"></th>
+                            <th class="mino S"></th>
+                        </tr>
+                        <tr>
+                            <th class="mino I"></th>
+                            <th class="mino O"></th>
+                            <th class="mino O"></th>
+                            <th class="mino L"></th>
+                            <th class="mino Z"></th>
+                            <th class="mino Z"></th>
+                            <th class="mino T"></th>
+                            <th class="mino S"></th>
+                        </tr>
+                        <tr>
+                            <th class="mino I"></th>
+                            <th class="mino L"></th>
+                            <th class="mino L"></th>
+                            <th class="mino L"></th>
+                            <th class="mino Z"></th>
+                            <th class="mino T"></th>
+                            <th class="mino T"></th>
+                            <th class="mino T"></th>
+                        </tr>
+                    </table>
+                    <div id="showGhostDiv">
                         <input id="showGhostCheckbox" type="checkbox" checked onchange="showGhostChanged()"/>
                         <label for="showGhostCheckbox">Afficher le fantôme</label>
                     </div>
                 </div>
             </fieldset>
         </section>
-        <section id="leaderboardLinkSection">
+        <section id="gameSection" style="display: none">
+            <div>
+<?php
+    echoTable("holdTable",   6,  0,  6);
+    echoTable("matrixTable", 4, 20, 10);
+    echoTable("nextTable",  24,  0,  6);
+?>
+                <table id="statsTable">
+                    <tr><th colspan=2>SCORE</th></tr>
+                    <tr><td id="score" colspan=2>0</td></tr>
+                    <tr><th colspan=2>RECORD</th></tr>
+                    <tr><td id="highScore" colspan=2>0</td></tr>
+                    <tr><th colspan=2>TEMPS</th></tr>
+                    <tr><td id="time" colspan=2>00:00</td></tr>
+                    <tr><td colspan=2><br/></td></tr>
+                    <tr><th>NIVEAU</th><td id="level">0</td></tr>
+                    <tr><th>OBJECTIF</th><td id="goal">0</td></tr>
+                    <tr><th>LIGNES</th><td id="clearedLines">0</td></tr>
+                </table>
+                <span id="messageSpan"></span>
+            </div>
+        </section>
+        <section id="startSection">
+            <fieldset>
+                <legend>Nouvelle partie</legend>
+                <div>
+                    <label for="startLevel">Niveau</label>
+                    <input type="number" id="startLevelInput" min="1" max="15" step="1" value="1">
+                    <div></div>
+                    <button id="startButton" type="button" onclick="newGame(Number(startLevelInput.value))" disabled>JOUER</button>
+                </div>
+            </fieldset>
+        </section>
+        <footer id="footer">
             <div>
                 <a href="leaderboard.php" target="_blank">TABLEAU DE SCORE</a>
+            </div>
+            <div id="credits">
+                Sources d'inspiration des thèmes :
+                <a href="https://github.com/kubowania/Tetris">Ania Kubow</a>
+                <a href="https://manjaro.org/">Manjaro</a>
+                <a href="https://www.tetriseffect.game/">Tetris Effect</a>
             </div>
         </footer>
     </body>

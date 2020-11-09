@@ -29,12 +29,12 @@ const THEME = {
     PIECE_POSITION: [1, 1]
 }
 const CLASSNAME = {
-    EMPTY_CELL: "empty-cell",
+    EMPTY_CELL: "",
     MINO: "mino",
-    LOCKED: "locked-mino",
-    TRAIL: "trail",
+    LOCKED: "locked",
+    TRAIL: "mino trail",
     GHOST: "ghost",
-    CLEARED_LINE: "mino cleared-line"
+    CLEARED_LINE: "cleared-line"
 }
 const DELAY = {
     LOCK: 500,
@@ -96,6 +96,8 @@ const actionsDefaultKeys = {
 }
 const RETRIES = 3
 const DEFAULT_THEME = "light-relief"
+
+var theme = null
 
 
 // Classes
@@ -246,7 +248,7 @@ class HoldQueue extends MinoesTable {
 
     draw() {
         this.clearTable()
-        if (this.piece && state != STATE.PAUSED)
+        if (this.piece)
             this.drawPiece(this.piece)
     }
 }
@@ -277,36 +279,31 @@ class Matrix extends MinoesTable {
     
     draw() {
         // grid
-        if (state == STATE.PAUSED) {
-            this.clearTable()
-        } else {
-            for (var y = 0; y < this.rows; y++) {
-                for (var x = 0; x < this.columns; x++) {
-                    if (this.clearedLines.includes(y))
-                        var className = CLASSNAME.CLEARED_LINE
-                    else
-                        var className = this.lockedMinoes[y][x] || CLASSNAME.EMPTY_CELL
-                    this.drawMino(x, y, className)
-                }
+        for (var y = 0; y < this.rows; y++) {
+            for (var x = 0; x < this.columns; x++) {
+                if (this.clearedLines.includes(y))
+                    var className = CLASSNAME.CLEARED_LINE
+                else
+                    var className = this.lockedMinoes[y][x] || CLASSNAME.EMPTY_CELL
+                this.drawMino(x, y, className)
             }
-            
-            // ghost
-            if (showGhost && !this.piece.locked && state != STATE.GAME_OVER) {
-                for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos.y++) {}
-                ghost.pos.y--
-                this.drawPiece(ghost)
-            }
+        }
+        
+        // ghost
+        if (showGhostCheckbox.value && !this.piece.locked && state != STATE.GAME_OVER) {
+            for (var ghost = this.piece.ghost; this.spaceToMove(ghost.minoesAbsPos); ghost.pos.y++) {}
+            ghost.pos.y--
+            this.drawPiece(ghost)
+        }
 
-            this.drawPiece(this.piece)
+        this.drawPiece(this.piece)
 
-            // trail
-            if (this.trail.height) {
-                this.trail.minoesPos.forEach(pos => {
-                    for (var y = pos.y; y < pos.y + this.trail.height; y++)
-                        if (this.table.rows[y].cells[pos.x].className == CLASSNAME.EMPTY_CELL)
-                            this.drawMino(pos.x, y, CLASSNAME.TRAIL)
-                })
-            }
+        // trail
+        if (this.trail.height) {
+            this.trail.minoesPos.forEach(pos => {
+                for (var y = pos.y; y < pos.y + this.trail.height; y++)
+                    this.drawMino(pos.x, y, CLASSNAME.TRAIL)
+            })
         }
     }
 }
@@ -323,17 +320,7 @@ class NextQueue extends MinoesTable {
 
     draw() {
         this.clearTable()
-        if (state != STATE.PAUSED) {
-            this.pieces.forEach(piece => this.drawPiece(piece))
-        }
-    }
-}
-
-
-class ThemePreview extends MinoesTable {
-    constructor() {
-        super("themePreviewTable")
-        this.piece = new Tetromino(THEME.PIECE_POSITION, "T")
+        this.pieces.forEach(piece => this.drawPiece(piece))
     }
 }
 
@@ -440,7 +427,6 @@ function newGame(startLevel) {
     startSection.style.display = "none"
     gameSection.style.display = "block"
     settingsSection.style.display = "none"
-    leaderboardLinkSection.style.display = "none"
 
     state = STATE.PLAYING
     pressedKeys = new Set()
@@ -611,8 +597,7 @@ function gameOver() {
                 }
                 request.open('POST', 'publish.php')
                 request.send(fd)
-            }
-        } else {
+            } else
             alert(info)
         }
     }
@@ -632,7 +617,6 @@ function gameOver() {
     startSection.style.display = "block"
     gameSection.style.display = "block"
     settingsSection.style.display = "none"
-    leaderboardLinkSection.style.display = "block"
 }
 
 function autorepeat() {
@@ -848,29 +832,8 @@ function loadSettings() {
     autorepeatPeriodRangeLabel.innerText = `Période : ${autorepeatPeriod}ms`
 
     themeSelect.value=themeName;
-    themePreview.drawPiece(themePreview.piece)
 
     showGhostCheckbox.checked = showGhost
-
-    /*startSection.style.display = "grid"
-    gameSection.style.display = "grid"
-    settingsSection.style.display = "block"
-    settingsButtonSection.style.display = "flex"
-
-    switch(state) {
-        case STATE.WAITING:
-            document.getElementById("start").style.display = "block"
-            document.getElementById("hideSettingsButton").style.display = "none"
-        break
-        case STATE.GAME_OVER:
-            document.getElementById("start").style.display = "block"
-            document.getElementById("hideSettingsButton").style.display = "flex"
-        break
-        case STATE.PAUSED:
-            document.getElementById("start").style.display = "none"
-            document.getElementById("hideSettingsButton").style.display = "flex"
-            
-    }*/
 }
 
 function waitKey(button, action) {
@@ -907,14 +870,13 @@ function themeChanged() {
 }
 
 function loadTheme() {
-    theme = document.getElementById("theme")
-    if (theme) document.head.removeChild(theme)
     var link  = document.createElement('link')
     link.id   = "theme";
     link.rel  = 'stylesheet'
     link.type = 'text/css'
     link.href = 'themes/' + themeName+ '/style.css'
     link.media = 'all'
+    if (theme) document.head.removeChild(theme)
     document.head.appendChild(link);
 }
 
@@ -945,7 +907,6 @@ window.onload = function() {
     stats = new Stats()
     matrix = new Matrix()
     nextQueue = new NextQueue()
-    themePreview = new ThemePreview()
     
     applySettings()
     loadSettings()
