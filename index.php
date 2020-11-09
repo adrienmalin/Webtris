@@ -36,6 +36,7 @@
         <title>Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
         <script type="text/javascript" src="app.js"></script>
+        <link rel="manifest" href="manifest.json">
     </head>
     <body>
         <section id="settingsSection">

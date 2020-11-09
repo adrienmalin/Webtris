@@ -1,8 +1,28 @@
+@font-face {
+    font-family: 'Share Tech';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Share Tech Regular'), local('ShareTech-Regular'), url(fonts/ShareTech.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Share Tech Mono';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Share Tech Mono Regular'), local('ShareTechMono-Regular'), url(fonts/ShareTechMono.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 body {
-    margin: 0;
-    font-family: sans-serif;
+    font-family: 'Share Tech';
+    font-size: 1em;
+    text-align: center;
     color: white;
-    background: #222;
+    background-color: #0D111D;
+    background-image: url("images/bg.jpg");
+    background-size: cover;
+    background-attachment: fixed;
 }
 
 h1 {
@@ -24,12 +44,15 @@ div {
 }
 
 fieldset {
-    border: 1px solid #444;
+    border: 1px white solid;
+    border-radius: 4px;
+    align-items: center;
+    margin: 1vmin auto;
+    width: 80%;
 }
 
-legend {
-    font-size: 0.9em;
-    color: #AAA;
+legend, label {
+    color: white;
 }
 
 fieldset > div {
@@ -67,7 +90,7 @@ fieldset input[type="checkbox"] {
 #gameSection div {
     display: grid;
     grid-gap: 3vmin;
-    margin: -3vmin 0 auto 0;
+    margin: -6vmin 0 auto 0;
 }
 
 #holdTable {
@@ -108,76 +131,49 @@ fieldset input[type="checkbox"] {
 th, td {
     font-weight: normal;
     padding: 0;
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
     height: 3vmin;
     width: 3vmin;
 }
 
 th {
+    background: transparent;
     border: 1px solid transparent;
 }
 
 td {
-    border: 1px solid #444;
+    background: transparent;
+    border: 1px inset rgba(128, 128, 128, 0.3);
 }
 
 .mino {
-    border: 1px solid;
-    border-radius: 1px;
+    background: rgba(127, 229, 255, 0.3);
+    border: 1px solid rgba(127, 229, 255, 0.7);
+    border-radius: 0.3vmin;
 }
 
-.I { /* cyan */
-    background: #99d9ea;
-    border-color: #d1edf5;
+.locked-mino {
+    background: rgba(242, 255, 255, 0.5);
+    border-color: rgba(242, 255, 255, 0.7);
 }
 
-.J { /* blue */
-    background: #7f92ff;
-    border-color: #c2cbff;
-}
-
-.L { /* orange */
-    background: #ffb27f;
-    border-color: #ffe1cd;
-}
-
-.O { /* yellow */
-    background: #ffe97f;
-    border-color: #fff5ca;
-}
-
-.S { /* green */
-    background: #7fff8e;
-    border-color: #ccffd2;
-}
-
-.T { /* magenta */
-    background: #d67fff;
-    border-color: #edc9ff;
-}
-
-.Z { /* red */
-    background: #ff7f7f;
-    border-color: #ffdada;
-}
-
-.locked-mino, .cleared-line {
-    background: #AAA;
-    border: 1px solid #CCC;
-    border-radius: 1px;
+.cleared-line {
+    background: white;
 }
 
 .trail {
-    background: #333;
-    border: 1px solid #444;
-    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.3vmin;
 }
 
 .ghost {
-    background: #555;
-    border: 1px solid #666;
-    border-radius: 1px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.3vmin;
 }
-
 
 #statsTable {
     grid-column: 1;
@@ -202,14 +198,20 @@ footer {
 
 a {
     text-decoration: none;
-    color: lightblue;
+    font-size: 1em;
+    color: white;
+}
+
+a:hover {
+    color: lightcyan;
 }
 
 #credits {
-    width: max-content;
     font-size: 0.8em;
     gap: 0.8em;
 }
+
+
 
 #leaderboard {
     min-width: 25%;
@@ -224,16 +226,18 @@ a {
 }
 
 #leaderboard td {
-    border: 0 !important;
+    font-family: 'Share Tech';
+    text-align: center;
+    font-size: 2.5vmin;
+    color: white;
+    border: 0;
 }
 
-
-#leaderboard td:first-child {
+#leaderboard td:first-child{
     text-align: left;
 }
 
 #leaderboard td:last-child {
     text-align: right;
 }
-
 

@@ -4,7 +4,7 @@
         <meta charset="utf-8" />
         <title>Meilleurs scores - Webtris</title>
         <link rel="icon" type="image/png" href="favicon.png">
-        <link rel="stylesheet" type="text/css" href="style.css" />
+        <script type="text/javascript" src="leaderboard.js"></script>
     </head>
     <body>
         <header>
@@ -28,8 +28,8 @@
     $db = null;
 ?>
         </table>
-        <div class="flex-container">
+        <footer>
             <button onclick="window.close()">Fermer</button>
-        </div>
+        </footer>
     </body>
 </html>

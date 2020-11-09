@@ -95,7 +95,7 @@ const actionsDefaultKeys = {
     pause: "Escape",
 }
 const RETRIES = 3
-const DEFAULT_THEME = "light-relief"
+const DEFAULT_THEME = "default"
 
 var theme = null
 
@@ -296,15 +296,15 @@ class Matrix extends MinoesTable {
             this.drawPiece(ghost)
         }
 
-        this.drawPiece(this.piece)
-
         // trail
         if (this.trail.height) {
             this.trail.minoesPos.forEach(pos => {
-                for (var y = pos.y; y < pos.y + this.trail.height; y++)
+                for (var y = pos.y; y < pos.y + this.trail.height - 1; y++)
                     this.drawMino(pos.x, y, CLASSNAME.TRAIL)
             })
         }
+
+        this.drawPiece(this.piece)
     }
 }
 

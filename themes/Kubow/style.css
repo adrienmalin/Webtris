@@ -46,7 +46,7 @@ div {
     width: auto;
 }
 
-fieldset, #statsTable {
+fieldset, #statsTable, #leaderboard {
     margin-top: 1rem;
     background: #f0f0f0;
     background-image: linear-gradient(#d0d0d0, #f0f0f0);
@@ -56,7 +56,7 @@ fieldset, #statsTable {
     color: #85796b;
 }
 
-legend {
+legend, #leaderboard caption {
     font-size: 0.9em;
     color: #d8edea;
     transform: translate(0, -0.6em);
@@ -286,4 +286,22 @@ a {
 #credits {
     font-size: 0.8em;
     gap: 0.8em;
+}
+
+#leaderboard {
+    margin: auto;
+}
+
+#leaderboard td {
+    margin: auto;
+    padding-left: 1rem;
+    text-align: center;
+}
+
+#leaderboard td:first-child{
+    text-align: left;
+}
+
+#leaderboard td:last-child {
+    text-align: right;
 }
