@@ -57,7 +57,7 @@ legend, label {
 
 fieldset > div {
     display: grid;
-    grid-template-columns: 3fr 2fr 3fr 2fr;
+    grid-template-columns: repeat(4, 1fr);
     grid-column-gap: 2em;
     grid-row-gap: 1em;
     justify-items: right;
@@ -73,18 +73,9 @@ label {
 }
 
 #themePreviewTable {
-    grid-column: 3 / 5;
+    grid-column: 1 / 5;
     width: auto;
-}
-
-fieldset input[type="checkbox"] {
-    width: auto;
-}
-
-#showGhostDiv {
-    grid-row: 2;
-    grid-column: 1/5;
-    width: 100%;
+    margin: auto;
 }
 
 #gameSection div {
@@ -125,7 +116,7 @@ fieldset input[type="checkbox"] {
 .minoes-table {
     table-layout: fixed;
     border-spacing: 0;
-    margin: auto;
+    margin: -6vmin 0 auto 0;
 }
 
 th, td {
@@ -189,12 +180,9 @@ td {
     border: 0;
 }
 
-footer {
-    position: absolute;
-    left: 50%;
-    bottom: 1em;
-    transform: translateX(-50%);
-    display: none;
+footer > * {
+    margin: 1em auto;
+    width: 100%;
 }
 
 a {
@@ -208,6 +196,7 @@ a:hover {
 }
 
 #credits {
+    width: 100%;
     font-size: 0.8em;
     gap: 0.8em;
 }
@@ -220,25 +209,23 @@ a:hover {
     text-align: center;
     border-top: 1px solid white;
     caption-side: top;
+    border-spacing: 1em 0.2em;
 }
 
 #leaderboard caption {
     color: white;
 }
 
+#leaderboard tr,
 #leaderboard td {
-    font-family: 'Share Tech';
-    text-align: center;
-    font-size: 2.5vmin;
-    color: white;
-    border: 0;
+    border: 0 !important;
+    margin: auto 10em;
 }
 
-#leaderboard td:first-child{
+#leaderboard td:first-child {
     text-align: left;
 }
 
 #leaderboard td:last-child {
     text-align: right;
 }
-

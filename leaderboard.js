@@ -1,11 +1,11 @@
 const DEFAULT_THEME = "default"
 
-function loadTheme() {
+function applyTheme() {
     var link  = document.createElement('link')
     link.id   = "theme";
     link.rel  = 'stylesheet'
     link.type = 'text/css'
-    link.href = 'themes/' + themeName + '/style.css'
+    link.href = `themes/'${themeName}/style.css`
     link.media = 'all'
     document.head.appendChild(link);
 }
